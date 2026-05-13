@@ -38,10 +38,10 @@ export default function App() {
     const fetchData = async () => {
       try {
         const [kpiRes, recRes, invRes, salesRes] = await Promise.all([
-          fetch('http://localhost:5000/api/kpi').then(res => res.json()).catch(() => null),
-          fetch('http://localhost:5000/api/recommendations').then(res => res.json()).catch(() => null),
-          fetch('http://localhost:5000/api/inventory').then(res => res.json()).catch(() => null),
-          fetch('http://localhost:5000/api/sales').then(res => res.json()).catch(() => null),
+          fetch('http://localhost:8000/api/kpi').then(res => res.json()).catch(() => null),
+          fetch('http://localhost:8000/api/recommendations').then(res => res.json()).catch(() => null),
+          fetch('http://localhost:8000/api/inventory').then(res => res.json()).catch(() => null),
+          fetch('http://localhost:8000/api/sales').then(res => res.json()).catch(() => null),
         ]);
 
         if (kpiRes) setKpi(kpiRes);

@@ -246,7 +246,7 @@ export default function UserCheckout() {
   
   // ── Fetch products from FastAPI backend ──────────────────────────
   useEffect(() => {
-    fetch('/api/products')
+    fetch('http://localhost:8000/api/products')
       .then(r => r.json())
       .then(data => {
         setProducts(Array.isArray(data) ? data : []);
