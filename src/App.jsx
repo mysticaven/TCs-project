@@ -97,7 +97,7 @@ export default function App() {
       <Toolbar sx={{ my: 2 }}>
         <LocalDining sx={{ color: theme.palette.primary.main, mr: 2, fontSize: 32 }} />
         <Typography variant="h6" noWrap component="div" fontWeight="bold">
-          Smart AI
+          QWIC
         </Typography>
       </Toolbar>
       <List>

@@ -175,7 +175,7 @@ function ProductCard({ item, onAdd, inCart }) {
       <div style={{ padding: '12px 14px', flex: 1, display: 'flex', flexDirection: 'column' }}>
         <div style={{ fontSize: 10, color: '#64748b', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 6 }}>{item.category || 'RETAIL'}</div>
         <div style={{ fontSize: 16, fontWeight: 900, color: '#0f172a', lineHeight: 1.3, minHeight: 42, marginBottom: 8 }}>
-          {name}
+          {item.name}
         </div>
         
         <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 8 }}>
@@ -395,7 +395,7 @@ export default function UserCheckout() {
           {loading ? (
             <div style={{ textAlign: 'center', padding: '100px 0' }}>
               <div style={{ fontSize: 40, animation: 'spin 2s linear infinite' }}>⏳</div>
-              <p style={{ color: '#666', marginTop: 12 }}>Connecting to Smart AI Database...</p>
+              <p style={{ color: '#666', marginTop: 12 }}>Connecting to QWIC Database...</p>
             </div>
           ) : (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 20 }}>
