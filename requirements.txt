@@ -1,10 +1,10 @@
-# Data Processing & Machine Learning
-pandas>=2.0.0
-numpy>=1.24.0
-scikit-learn>=1.3.0
-mlxtend>=0.23.0
-
-# Optional: API / Microservice requirements (for FastAPI AWS deployment)
-fastapi>=0.100.0
-uvicorn>=0.23.0
+fastapi>=0.110.0
+uvicorn[standard]>=0.29.0
+sqlalchemy>=2.0.0
 pydantic>=2.0.0
+pandas>=2.0.0
+mlxtend>=0.23.0
+scikit-learn>=1.4.0
+numpy>=1.26.0
+python-dotenv>=1.0.0
+aiofiles>=23.2.0
