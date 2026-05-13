@@ -80,72 +80,213 @@ app.post('/api/recommendations/:id/dismiss', (req, res) => {
   const index = aiRecommendations.findIndex(r => r.id === parseInt(id));
   if (index !== -1) {
     aiRecommendations[index].status = 'dismissed';
-    res.json({ message: 'Recommendation dismissed successfully' });
-  } else {
-    res.status(404).json({ error: 'Recommendation not found' });
+// ─── Load ML Rules from trained CSV (at startup) ───────────────────────────
+let mlRules = [];
+const RULES_PATH = path.join(__dirname, '../ml_models/massive_trained_rules.csv');
+
+function loadMlRules() {
+  try {
+    const raw = fs.readFileSync(RULES_PATH, 'utf-8');
+    const lines = raw.trim().split('\n').slice(1); // skip header
+    mlRules = lines.map(line => {
+      // CSV columns: antecedents,consequents,antecedent support,consequent support,support,confidence,lift,...
+      const cols = line.split(',');
+      // Antecedent may be quoted e.g. "Garlic Bread, Wireless Mouse"
+      const antRaw = line.match(/^"([^"]+)"|^([^,]+)/)?.[0] || '';
+      const antecedents = antRaw.replace(/"/g, '').split(',').map(s => s.trim());
+      // The consequents start after the first field
+      const rest = line.slice(antRaw.length + 1); // skip antecedent + comma
+      const conRaw = rest.match(/^"([^"]+)"|^([^,]+)/)?.[0] || '';
+      const consequents = conRaw.replace(/"/g, '').split(',').map(s => s.trim());
+      const numCols = rest.slice(conRaw.length + 1).split(',');
+      return {
+        antecedents,
+        consequents,
+        confidence: parseFloat(numCols[2]) || 0,
+        lift: parseFloat(numCols[4]) || 0
+      };
+    }).filter(r => r.lift > 0);
+    console.log(`✅ Loaded ${mlRules.length} ML rules from trained CSV`);
+  } catch (e) {
+    console.warn('⚠️  ML Rules CSV not found. Run train_on_massive.py first. Error:', e.message);
   }
+}
+loadMlRules();
+
+// ─── Load Products from massive_sales_data.csv ─────────────────────────────
+let PRODUCTS = [];
+const SALES_CSV = path.join(__dirname, '../ml_models/massive_sales_data.csv');
+
+function loadProducts() {
+  try {
+    const raw = fs.readFileSync(SALES_CSV, 'utf-8');
+    const lines = raw.trim().split('\n').slice(1, 100000); // read up to 100k rows
+    const seen = new Map();
+    let id = 1;
+    for (const line of lines) {
+      // CSV: Transaction_ID,Date,Time,Product_Name,Category,Price,Quantity,Total_Sales,Is_Bundle_Triggered
+      const cols = line.split(',');
+      if (cols.length < 6) continue;
+      const name = cols[3]?.trim();
+      const category = cols[4]?.trim();
+      const price = parseFloat(cols[5]) || 9.99;
+      if (name && !seen.has(name)) {
+        seen.set(name, true);
+        PRODUCTS.push({ id: id++, name, category, price: Math.round(price * 100) / 100 });
+      }
+    }
+    console.log(`✅ Loaded ${PRODUCTS.length} unique products from massive_sales_data.csv`);
+  } catch (e) {
+    console.warn('⚠️  Sales CSV not found. Using fallback product list. Error:', e.message);
+    // Fallback products if CSV isn't available
+    PRODUCTS = [
+      { id: 1, name: 'Laptop', category: 'Electronics', price: 45000 },
+      { id: 2, name: 'Wireless Mouse', category: 'Electronics', price: 1200 },
+      { id: 3, name: 'DSLR Camera', category: 'Electronics', price: 55000 },
+      { id: 4, name: 'SD Card', category: 'Accessories', price: 800 },
+      { id: 5, name: 'Pasta', category: 'Groceries', price: 250 },
+      { id: 6, name: 'Garlic Bread', category: 'Groceries', price: 100 },
+      { id: 7, name: 'Diapers', category: 'Baby', price: 600 },
+      { id: 8, name: 'Wet Wipes', category: 'Baby', price: 150 },
+    ];
+  }
+}
+loadProducts();
+
+// ─── ML Coupon Engine (reads from pre-trained rules) ───────────────────────
+function findBestCoupon(cartItems) {
+  if (!cartItems || cartItems.length === 0) return null;
+  const cartSet = new Set(cartItems.map(s => s.trim()));
+
+  // Sort by highest lift (best association)
+  const sorted = [...mlRules].sort((a, b) => b.lift - a.lift);
+
+  for (const rule of sorted) {
+    const antMatch = rule.antecedents.every(a => cartSet.has(a));
+    if (!antMatch) continue;
+    const rec = rule.consequents[0];
+    if (!rec || cartSet.has(rec)) continue;
+
+    // Find this product in our catalog
+    const productInCatalog = PRODUCTS.find(p => p.name.toLowerCase() === rec.toLowerCase());
+    const price = productInCatalog ? productInCatalog.price : 99;
+
+    const discountPct = Math.min(50, Math.round(rule.lift * 8));
+    const discountPrice = Math.round(price * (1 - discountPct / 100));
+    return {
+      recommendation: rec,
+      triggerItems: rule.antecedents,
+      discountText: `${discountPct}% OFF`,
+      discountPrice,
+      originalPrice: price,
+      confidence: Math.round(rule.confidence * 100),
+      lift: Math.round(rule.lift * 100) / 100,
+      message: `🤖 AI Insight: ${Math.round(rule.confidence * 100)}% of customers who buy ${rule.antecedents.join(' + ')} also buy ${rec}!`
+    };
+  }
+  return null;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// API ROUTES
+// ═══════════════════════════════════════════════════════════════════
+
+// ── Products from real CSV data ────────────────────────────────────
+app.get('/api/products', (req, res) => {
+  res.json(PRODUCTS);
 });
 
-// IoT Endpoint: Receive camera data from Raspberry Pi
+// ── Real ML coupon generator (triggered by inactivity on frontend) ─
+app.post('/api/coupon', (req, res) => {
+  const { cart } = req.body;
+  if (!cart || cart.length === 0) return res.json({ coupon: null });
+  const coupon = findBestCoupon(cart);
+  console.log(`[ML COUPON] Cart: [${cart.join(', ')}] → Rec: ${coupon?.recommendation || 'None'}`);
+  res.json({ coupon });
+});
+
+// ── IoT: Receive camera data from Raspberry Pi ─────────────────────
 app.post('/api/cart/sync', async (req, res) => {
   const { device_id, cart } = req.body;
   console.log(`\n[IoT CLOUD] Received camera data from ${device_id}:`, cart);
-
   try {
-    // 1. Send the Raspberry Pi camera data to the Python ML Engine running on AWS
-    // For local testing, it defaults to port 8000 if the Env Var is missing.
     const pythonApiUrl = process.env.PYTHON_API_URL || 'http://127.0.0.1:8000';
     const mlResponse = await fetch(`${pythonApiUrl}/predict_bundle`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ items: cart })
     });
-
-    if (!mlResponse.ok) throw new Error("ML Service unreachable");
-    
+    if (!mlResponse.ok) throw new Error('ML Service unreachable');
     const mlData = await mlResponse.json();
-
-    // 2. If the ML Engine found a bundle, save it globally so the Frontend can display it
     if (mlData.recommendation) {
-      console.log(`[IoT CLOUD] ML Engine generated offer: ${mlData.discountText}`);
       latestIoTOffer = {
-        triggerItem: cart.join(", "),
-        offerItem: { name: mlData.recommendation }, // Mocked structure for frontend
+        triggerItem: cart.join(', '),
+        offerItem: PRODUCTS.find(p => p.name === mlData.recommendation) || { name: mlData.recommendation },
         discountText: mlData.discountText,
+        discountPrice: mlData.discountPrice,
         message: mlData.message,
-        aiType: `Cloud Market Basket Analysis (Lift: ${mlData.lift})`
+        aiType: `Cloud MBA (Lift: ${mlData.lift})`
       };
-    } else {
-      console.log(`[IoT CLOUD] No bundle generated for this cart.`);
-      latestIoTOffer = null;
-    }
-
+    } else { latestIoTOffer = null; }
     res.json({ success: true, ai_response: mlData });
-
   } catch (error) {
-    console.error(`[IoT CLOUD ERROR] Failed to contact Python ML Engine: ${error.message}`);
-    console.log("Ensure you run: python ml_models/cloud_ml_api.py");
-    res.status(500).json({ error: 'ML Engine Offline' });
+    // Fallback to local rules if Python ML is offline
+    const coupon = findBestCoupon(cart);
+    if (coupon) {
+      latestIoTOffer = {
+        triggerItem: cart.join(', '),
+        offerItem: PRODUCTS.find(p => p.name === coupon.recommendation) || { name: coupon.recommendation },
+        discountText: coupon.discountText,
+        discountPrice: coupon.discountPrice,
+        message: coupon.message,
+        aiType: `Local MBA (Lift: ${coupon.lift})`
+      };
+    }
+    res.json({ success: true, ai_response: coupon || { recommendation: null } });
   }
 });
 
-// Frontend Polling Endpoint: React will constantly check this to see if the camera triggered an offer
+// ── Frontend polling: latest IoT offer ────────────────────────────
 app.get('/api/iot/latest_offer', (req, res) => {
   if (latestIoTOffer) {
-    // Send the offer and then clear it so it doesn't pop up infinitely
-    const offerToSend = latestIoTOffer;
+    const offer = latestIoTOffer;
     latestIoTOffer = null;
-    res.json({ new_offer: true, offer: offerToSend });
+    res.json({ new_offer: true, offer });
   } else {
     res.json({ new_offer: false });
   }
 });
 
-// Catch-all route to serve the React index.html for any unknown routes
+// ── Dashboard KPI routes ───────────────────────────────────────────
+app.get('/api/kpi', (req, res) => res.json({ liveRevenue: 15420, occupancyRate: 85, wasteRiskLevel: 'High' }));
+app.get('/api/recommendations', (req, res) => res.json([
+  { id: 1, trigger: 'Mutton Curry 40% below target', action: '15% discount bundle with Cold Coffee', impact: '+₹1,200', status: 'pending' },
+  { id: 2, trigger: 'Tomatoes expiring <12h', action: 'Recommend Tomato Soup as Chef Special', impact: 'Save ₹400', status: 'pending' }
+]));
+app.get('/api/inventory', (req, res) => res.json([
+  { id: 1, name: 'Tomatoes', category: 'Groceries', status: 'Red', expiry: '< 12 hours', stock: '10 kg' },
+  { id: 2, name: 'Milk', category: 'Beverages', status: 'Orange', expiry: '1 Day', stock: '20 Liters' },
+  { id: 3, name: 'Chicken', category: 'Main Course', status: 'Green', expiry: '3 Days', stock: '50 kg' },
+]));
+app.get('/api/sales', (req, res) => res.json([
+  { time: '10:00', actual: 2000, predicted: 2200 },
+  { time: '11:00', actual: 3500, predicted: 3000 },
+  { time: '12:00', actual: 4000, predicted: 4500 },
+  { time: '13:00', actual: 6000, predicted: 6500 },
+  { time: '14:00', actual: 5500, predicted: 5000 },
+  { time: '15:00', actual: 3000, predicted: 3500 },
+]));
+
+app.post('/api/recommendations/:id/approve', (req, res) => res.json({ message: 'Approved' }));
+app.post('/api/recommendations/:id/dismiss', (req, res) => res.json({ message: 'Dismissed' }));
+
+// ── Catch-all: serve React app ─────────────────────────────────────
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../dist/index.html'));
 });
 
 app.listen(PORT, () => {
-  console.log(`Smart AI Manager Backend running on port ${PORT}`);
+  console.log(`\n🚀 Smart AI Manager Backend running on port ${PORT}`);
+  console.log(`   Products loaded: ${PRODUCTS.length}`);
+  console.log(`   ML Rules loaded: ${mlRules.length}`);
 });
