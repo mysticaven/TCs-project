@@ -26,8 +26,7 @@ export default function UserCheckout() {
     if (isCameraActive) {
       interval = setInterval(async () => {
         try {
-          const backendUrl = import.meta.env.VITE_API_URL || 'http://34.230.28.56:5000';
-          const response = await fetch(`${backendUrl}/api/iot/latest_offer`);
+          const response = await fetch('/api/iot/latest_offer');
           const data = await response.json();
           if (data.new_offer && data.offer) {
             console.log("Cloud IoT Offer Received!", data.offer);
@@ -55,8 +54,7 @@ export default function UserCheckout() {
 
     // Send the current cart to the backend ML Engine for real-time recommendations
     try {
-      const backendUrl = import.meta.env.VITE_API_URL || 'http://34.230.28.56:5000';
-      const response = await fetch(`${backendUrl}/api/cart/sync`, {
+      const response = await fetch('/api/cart/sync', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ device_id: 'kiosk-01', cart: newCart.map(i => i.name) })
