@@ -137,7 +137,7 @@ export default function UserCheckout() {
 
   // ── Load products from backend (which reads CSV) ──────────────
   useEffect(() => {
-    fetch('/api/products')
+    fetch('http://localhost:8000/api/products')
       .then(r => r.json())
       .then(data => { setProducts(data); setLoading(false); })
       .catch(() => setLoading(false));
@@ -148,7 +148,7 @@ export default function UserCheckout() {
     if (!isCameraOn) return;
     const interval = setInterval(async () => {
       try {
-        const r = await fetch('/api/iot/latest_offer');
+        const r = await fetch('http://localhost:8000/api/iot/latest_offer');
         const d = await r.json();
         if (d.new_offer && d.offer && !showOffer) {
           setOffer({ ...d.offer, recommendation: d.offer.offerItem?.name });
@@ -163,7 +163,7 @@ export default function UserCheckout() {
   const triggerCoupon = async (cartItems) => {
     if (cartItems.length === 0 || showOffer) return;
     try {
-      const r = await fetch('/api/coupon', {
+      const r = await fetch('http://localhost:8000/api/coupon', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ cart: cartItems.map(i => i.name) })
