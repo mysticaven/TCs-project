@@ -88,7 +88,7 @@ function AiDealModal({ coupon, products, onAccept, onDecline }) {
               </div>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 11, color: '#007185', fontWeight: 700, textTransform: 'uppercase' }}>{prod.category}</div>
-                <div style={{ fontSize: 16, fontWeight: 800, color: '#111', margin: '2px 0 6px' }}>{prod.name}</div>
+                <div style={{ fontSize: 16, fontWeight: 800, color: '#111', margin: '2px 0 6px' }}>{prod.name || 'Premium Item'}</div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <span style={{ textDecoration: 'line-through', color: '#999', fontSize: 13 }}>₹{prod.price}</span>
                   <span style={{ color: '#cc0c39', fontWeight: 900, fontSize: 22 }}>₹{coupon.discount_price}</span>
@@ -175,9 +175,9 @@ function ProductCard({ item, onAdd, inCart }) {
 
       {/* Info */}
       <div style={{ padding: '12px 14px', flex: 1, display: 'flex', flexDirection: 'column' }}>
-        <div style={{ fontSize: 11, color: '#007185', fontWeight: 700, marginBottom: 2 }}>{item.category}</div>
-        <div style={{ fontSize: 14, fontWeight: 700, color: '#111', lineHeight: 1.3, height: 36, overflow: 'hidden', marginBottom: 4 }}>
-          {item.name}
+        <div style={{ fontSize: 11, color: '#007185', fontWeight: 700, marginBottom: 2 }}>{item.category || 'Category'}</div>
+        <div style={{ fontSize: 15, fontWeight: 800, color: '#111', lineHeight: 1.4, minHeight: 42, marginBottom: 6 }}>
+          {item.name || item.product_name || 'Premium Product'}
         </div>
         
         <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 8 }}>
@@ -246,7 +246,7 @@ export default function UserCheckout() {
   
   // ── Fetch products from FastAPI backend ──────────────────────────
   useEffect(() => {
-    fetch('http://localhost:8000/api/products')
+    fetch('/api/products')
       .then(r => r.json())
       .then(data => {
         setProducts(Array.isArray(data) ? data : []);
@@ -422,7 +422,7 @@ export default function UserCheckout() {
                         {item.image_emoji || '📦'}
                       </div>
                       <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: 13, fontWeight: 700, color: '#111', lineHeight: 1.2 }}>{item.name}</div>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: '#111', lineHeight: 1.2 }}>{item.name || 'Premium Product'}</div>
                         <div style={{ fontSize: 15, fontWeight: 800, color: '#111', margin: '4px 0' }}>₹{item.price}</div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                           <div style={{ display: 'flex', alignItems: 'center', background: '#f3f3f3', borderRadius: 6, padding: '2px' }}>
