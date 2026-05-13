@@ -73,48 +73,46 @@ function AiDealModal({ coupon, products, onAccept, onDecline }) {
           <p style={{ margin: '8px 0 0', opacity: 0.8, fontSize: 13 }}>We found a perfect match for your cart.</p>
         </div>
 
-        <div style={{ padding: 24 }}>
+        <div style={{ padding: 32 }}>
           {prod && (
             <div style={{ 
-              background: '#f9f9f9', borderRadius: 16, padding: 16, 
-              border: '1px solid #eee', marginBottom: 20, display: 'flex', gap: 16
+              background: '#f8fafc', borderRadius: 20, padding: 20, 
+              border: '1px solid #e2e8f0', marginBottom: 24, display: 'flex', gap: 20, alignItems: 'center'
             }}>
               <div style={{ 
-                width: 80, height: 80, background: '#fff', borderRadius: 12, 
-                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 40,
-                boxShadow: '0 4px 12px rgba(0,0,0,0.05)'
+                width: 90, height: 90, background: '#fff', borderRadius: 16, 
+                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 44,
+                boxShadow: '0 8px 20px rgba(0,0,0,0.06)', border: '1px solid #f1f5f9'
               }}>
                 {prod.image_emoji || '📦'}
               </div>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 11, color: '#007185', fontWeight: 700, textTransform: 'uppercase' }}>{prod.category}</div>
-                <div style={{ fontSize: 16, fontWeight: 800, color: '#111', margin: '2px 0 6px' }}>{prod.name || 'Premium Item'}</div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ textDecoration: 'line-through', color: '#999', fontSize: 13 }}>₹{prod.price}</span>
-                  <span style={{ color: '#cc0c39', fontWeight: 900, fontSize: 22 }}>₹{coupon.discount_price}</span>
-                  <span style={{ background: '#cc0c39', color: '#fff', fontSize: 10, fontWeight: 900, padding: '2px 6px', borderRadius: 4 }}>
-                    {coupon.discount_text}
-                  </span>
+                <div style={{ fontSize: 11, color: '#64748b', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 4 }}>{prod.category}</div>
+                <div style={{ fontSize: 17, fontWeight: 900, color: '#0f172a', margin: '0 0 8px', lineHeight: 1.2 }}>{prod.name || 'Premium Item'}</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <span style={{ textDecoration: 'line-through', color: '#94a3b8', fontSize: 14 }}>₹{prod.price}</span>
+                  <span style={{ color: '#dc2626', fontWeight: 900, fontSize: 24 }}>₹{coupon.discount_price}</span>
                 </div>
               </div>
             </div>
           )}
 
-          <p style={{ fontSize: 14, color: '#444', lineHeight: 1.5, marginBottom: 20, fontStyle: 'italic', borderLeft: '4px solid #FFD814', paddingLeft: 12 }}>
+          <div style={{ background: '#f0fdf4', color: '#166534', padding: '16px', borderRadius: 16, fontSize: 14, fontWeight: 600, lineHeight: 1.5, marginBottom: 28, border: '1px solid #dcfce7' }}>
+            <span style={{ fontSize: 20, marginRight: 8 }}>💡</span>
             "{coupon.message}"
-          </p>
+          </div>
 
-          <div style={{ display: 'flex', gap: 12 }}>
-            <button onClick={onDecline} style={{ flex: 1, padding: '14px 0', background: '#f0f0f0', border: 'none', borderRadius: 12, cursor: 'pointer', fontWeight: 700, color: '#555' }}>
-              No, Checkout Now
+          <div style={{ display: 'flex', gap: 16 }}>
+            <button onClick={onDecline} style={{ flex: 1, padding: '16px 0', background: '#f1f5f9', border: 'none', borderRadius: 100, cursor: 'pointer', fontWeight: 800, color: '#475569', fontSize: 14, transition: 'all 0.2s' }}>
+              Skip Deal
             </button>
-            <button onClick={() => onAccept(prod, coupon.discount_price)} style={{ flex: 1.5, padding: '14px 0', background: '#FFD814', border: 'none', borderRadius: 12, cursor: 'pointer', fontWeight: 800, fontSize: 16, boxShadow: '0 4px 15px rgba(255,216,20,0.3)' }}>
-              Add to Cart & Pay
+            <button onClick={() => onAccept(prod, coupon.discount_price)} style={{ flex: 1.8, padding: '16px 0', background: '#FFD814', border: '1px solid #FCD200', borderRadius: 100, cursor: 'pointer', fontWeight: 900, fontSize: 16, color: '#111', boxShadow: '0 10px 25px rgba(255,216,20,0.4)', transition: 'transform 0.2s' }}>
+              Add & Checkout
             </button>
           </div>
 
-          <div style={{ textAlign: 'center', marginTop: 16, fontSize: 11, color: '#aaa' }}>
-            Offer expires in <strong style={{ color: '#cc0c39' }}>{secs}s</strong>
+          <div style={{ textAlign: 'center', marginTop: 24, fontSize: 12, color: '#94a3b8', fontWeight: 600 }}>
+            Hurry! Offer expires in <span style={{ color: '#dc2626', fontWeight: 800 }}>{secs} seconds</span>
           </div>
         </div>
       </div>
@@ -175,9 +173,9 @@ function ProductCard({ item, onAdd, inCart }) {
 
       {/* Info */}
       <div style={{ padding: '12px 14px', flex: 1, display: 'flex', flexDirection: 'column' }}>
-        <div style={{ fontSize: 11, color: '#007185', fontWeight: 700, marginBottom: 2 }}>{item.category || 'Category'}</div>
-        <div style={{ fontSize: 15, fontWeight: 800, color: '#111', lineHeight: 1.4, minHeight: 42, marginBottom: 6 }}>
-          {item.name || item.product_name || 'Premium Product'}
+        <div style={{ fontSize: 10, color: '#64748b', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 6 }}>{item.category || 'RETAIL'}</div>
+        <div style={{ fontSize: 16, fontWeight: 900, color: '#0f172a', lineHeight: 1.3, minHeight: 42, marginBottom: 8 }}>
+          {name}
         </div>
         
         <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 8 }}>
@@ -186,19 +184,26 @@ function ProductCard({ item, onAdd, inCart }) {
         </div>
 
         <div style={{ marginTop: 'auto' }}>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
-            <span style={{ fontSize: 22, fontWeight: 900, color: '#0F1111' }}>₹{item.price}</span>
-            <span style={{ fontSize: 12, color: '#565959', textDecoration: 'line-through' }}>₹{mrp}</span>
+          <div style={{ marginBottom: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
+              <span style={{ fontSize: 14, fontWeight: 800, color: '#0f172a', alignSelf: 'flex-start', marginTop: 4 }}>₹</span>
+              <span style={{ fontSize: 32, fontWeight: 900, color: '#0f172a', letterSpacing: '-1px' }}>{Math.floor(item.price)}</span>
+              <span style={{ fontSize: 16, fontWeight: 700, color: '#0f172a' }}>.{(item.price % 1).toFixed(2).substring(2)}</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: -2 }}>
+              <span style={{ fontSize: 13, color: '#94a3b8', textDecoration: 'line-through' }}>₹{mrp}</span>
+              <span style={{ fontSize: 12, color: '#dc2626', fontWeight: 800 }}>Save ₹{(mrp - item.price).toFixed(0)}</span>
+            </div>
           </div>
-          <div style={{ fontSize: 11, color: '#cc0c39', fontWeight: 700, marginBottom: 12 }}>Save ₹{mrp - item.price}</div>
           
           <button onClick={handleAdd} style={{
-            width: '100%', padding: '10px 0', borderRadius: 25, border: 'none', cursor: 'pointer',
-            background: flash ? '#00B127' : inCart ? '#FFD814' : '#FFA41C',
-            color: flash ? '#fff' : '#111', fontWeight: 800, fontSize: 13, 
-            transition: 'all 0.2s', boxShadow: '0 2px 5px rgba(0,0,0,0.1)'
+            width: '100%', padding: '14px 0', borderRadius: 100, border: 'none', cursor: 'pointer',
+            background: flash ? '#22c55e' : inCart ? '#facc15' : '#1e293b',
+            color: (flash || !inCart) ? '#fff' : '#111', fontWeight: 900, fontSize: 14, 
+            transition: 'all 0.3s', boxShadow: '0 10px 20px rgba(0,0,0,0.1)',
+            transform: flash ? 'scale(1.02)' : 'scale(1)'
           }}>
-            {flash ? '✓ Added to Cart' : inCart ? 'Add One More' : 'Add to Cart'}
+            {flash ? '✓ Added' : inCart ? 'Add More' : 'Add to Cart'}
           </button>
         </div>
       </div>
@@ -249,7 +254,9 @@ export default function UserCheckout() {
     fetch('/api/products')
       .then(r => r.json())
       .then(data => {
-        setProducts(Array.isArray(data) ? data : []);
+        // Filter out corrupted data (items where name is numeric)
+        const valid = (Array.isArray(data) ? data : []).filter(p => p.name && isNaN(p.name));
+        setProducts(valid);
         setLoading(false);
       })
       .catch(() => setLoading(false));
@@ -422,57 +429,66 @@ export default function UserCheckout() {
                         {item.image_emoji || '📦'}
                       </div>
                       <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: 13, fontWeight: 700, color: '#111', lineHeight: 1.2 }}>{item.name || 'Premium Product'}</div>
-                        <div style={{ fontSize: 15, fontWeight: 800, color: '#111', margin: '4px 0' }}>₹{item.price}</div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                          <div style={{ display: 'flex', alignItems: 'center', background: '#f3f3f3', borderRadius: 6, padding: '2px' }}>
-                            <button onClick={() => updateQty(item.id, -1)} style={{ width: 24, height: 24, border: 'none', background: 'none', cursor: 'pointer', fontWeight: 900 }}>−</button>
-                            <span style={{ width: 24, textAlign: 'center', fontSize: 13, fontWeight: 800 }}>{item.qty}</span>
-                            <button onClick={() => updateQty(item.id, 1)} style={{ width: 24, height: 24, border: 'none', background: 'none', cursor: 'pointer', fontWeight: 900 }}>+</button>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: '#111', lineHeight: 1.3, marginBottom: 4 }}>
+                          {item.name || 'Premium Product'}
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                          <span style={{ fontSize: 18, fontWeight: 900, color: '#B12704' }}>₹{item.price}</span>
+                          {item.qty > 1 && <span style={{ fontSize: 12, color: '#565959', fontWeight: 600 }}>x {item.qty}</span>}
+                        </div>
+                        
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', background: '#F0F2F2', borderRadius: 8, padding: '2px', border: '1px solid #D5D9D9', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
+                            <button onClick={() => updateQty(item.id, -1)} style={{ width: 28, height: 28, border: 'none', background: 'none', cursor: 'pointer', fontSize: 18, color: '#111', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>−</button>
+                            <span style={{ width: 30, textAlign: 'center', fontSize: 14, fontWeight: 700, color: '#111' }}>{item.qty}</span>
+                            <button onClick={() => updateQty(item.id, 1)} style={{ width: 28, height: 28, border: 'none', background: 'none', cursor: 'pointer', fontSize: 18, color: '#111', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
                           </div>
-                          <button onClick={() => removeItem(item.id)} style={{ background: 'none', border: 'none', color: '#cc0c39', cursor: 'pointer', fontSize: 12, fontWeight: 700 }}>Remove</button>
+                          <button onClick={() => removeItem(item.id)} style={{ background: 'none', border: 'none', color: '#007185', fontSize: 12, cursor: 'pointer', fontWeight: 700 }}>Delete</button>
                         </div>
                       </div>
                     </div>
                   ))}
                 </div>
 
-                <div style={{ borderTop: '2px solid #f0f0f0', paddingTop: 16 }}>
+                <div style={{ borderTop: '2px solid #f3f3f3', paddingTop: 20 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                    <span style={{ color: '#666' }}>Subtotal</span>
-                    <span style={{ fontWeight: 700 }}>₹{subtotal.toFixed(2)}</span>
+                    <span style={{ color: '#565959', fontSize: 14 }}>Subtotal ({itemCount} items)</span>
+                    <span style={{ fontWeight: 700, fontSize: 15 }}>₹{subtotal.toFixed(2)}</span>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 20 }}>
-                    <span style={{ color: '#111', fontWeight: 800, fontSize: 18 }}>Total</span>
-                    <span style={{ color: '#B12704', fontWeight: 900, fontSize: 22 }}>₹{subtotal.toFixed(2)}</span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 24 }}>
+                    <span style={{ color: '#0F1111', fontWeight: 800, fontSize: 18 }}>Order Total</span>
+                    <span style={{ color: '#B12704', fontWeight: 900, fontSize: 24, letterSpacing: '-0.5px' }}>₹{subtotal.toFixed(2)}</span>
                   </div>
 
-                  <button 
-                    onClick={startCheckout}
-                    disabled={checkingDeals}
-                    style={{ 
-                      width: '100%', padding: '16px', background: '#FFD814', border: 'none', 
-                      borderRadius: 12, fontWeight: 800, fontSize: 16, cursor: 'pointer',
-                      boxShadow: '0 4px 12px rgba(255,216,20,0.3)', transition: 'all 0.2s',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10
-                    }}
-                  >
-                    {checkingDeals ? (
-                      <>Checking AI Deals... <div className="spinner"></div></>
-                    ) : (
-                      'Proceed to Checkout'
-                    )}
-                  </button>
-                  
-                  <button 
-                    onClick={startCheckout}
-                    style={{ 
-                      width: '100%', padding: '14px', background: '#FFA41C', border: 'none', 
-                      borderRadius: 12, fontWeight: 800, fontSize: 15, cursor: 'pointer', marginTop: 12
-                    }}
-                  >
-                    Buy Now
-                  </button>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    <button 
+                      onClick={startCheckout}
+                      disabled={checkingDeals}
+                      style={{ 
+                        width: '100%', padding: '14px', background: '#FFD814', border: '1px solid #FCD200', 
+                        borderRadius: 100, fontWeight: 700, fontSize: 15, cursor: 'pointer',
+                        boxShadow: '0 2px 5px rgba(213,217,217,0.5)', transition: 'all 0.2s',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10
+                      }}
+                    >
+                      {checkingDeals ? (
+                        <>Checking AI Deals... <div className="spinner"></div></>
+                      ) : (
+                        'Proceed to Checkout'
+                      )}
+                    </button>
+                    
+                    <button 
+                      onClick={startCheckout}
+                      style={{ 
+                        width: '100%', padding: '14px', background: '#FFA41C', border: '1px solid #FF8F00', 
+                        borderRadius: 100, fontWeight: 700, fontSize: 15, cursor: 'pointer',
+                        boxShadow: '0 2px 5px rgba(213,217,217,0.5)'
+                      }}
+                    >
+                      Buy Now
+                    </button>
+                  </div>
                 </div>
               </div>
             )}

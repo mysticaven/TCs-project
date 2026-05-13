@@ -103,11 +103,11 @@ def get_emoji(name, category):
 ML_RULES = []
 
 def load_ml_rules():
-    rules_path = os.path.join(os.path.dirname(__file__), "ml_models", "massive_trained_rules.csv")
+    rules_path = os.path.join(os.path.dirname(__file__), "ml_models", "retail_rules.csv")
     if not os.path.exists(rules_path):
         print("[WARN] ML rules CSV not found. Run: python ml_models/train_on_massive.py")
         return
-    with open(rules_path, "r") as f:
+    with open(rules_path, "r", encoding="utf-8") as f:
         reader = csv.reader(f)
         next(reader)
         for row in reader:
@@ -157,9 +157,9 @@ def find_coupon(cart_names: list[str], expiry_override: str = None) -> Optional[
 
         # --- MBA-based: match cart to trained association rules ---
         if not cart_names: return None
-        cart_set = set(n.strip() for n in cart_names)
+        cart_set = set(n.strip().lower() for n in cart_names)
         for rule in ML_RULES:
-            if all(a in cart_set for a in rule["antecedents"]):
+            if all(a.lower() in cart_set for a in rule["antecedents"]):
                 rec = rule["consequents"][0]
                 if rec in cart_set: continue
                 prod = db.query(Product).filter(Product.name.ilike(rec)).first()
@@ -187,7 +187,8 @@ def seed_products():
         if db.query(Product).count() > 0:
             print(f"[OK] {db.query(Product).count()} products already in DB")
             return
-        data = json.loads(open(json_path).read())
+        with open(json_path, "r", encoding="utf-8") as f:
+            data = json.loads(f.read())
         # Assign sample expiry dates to perishable categories
         perishable = ['Groceries', 'Snacks & Beverages']
         today = date.today()
