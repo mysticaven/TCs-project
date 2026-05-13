@@ -4,6 +4,7 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime, Text, Date
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
+from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from typing import Optional
 import json, os, csv
@@ -78,6 +79,21 @@ ITEM_EMOJI = {
     'T-Shirt': '👕', 'Jeans': '👖', 'Sneakers': '👟', 'Dress Shoes': '👞',
     'Socks': '🧦', 'Hat': '🧢', 'Sunglasses': '🕶️', 'Watch': '⌚', 'Backpack': '🎒',
     'Notebook': '📓', 'Pens': '✏️', 'Pencils': '✏️', 'Stapler': '📌',
+    'Toothpaste': '🦷', 'Toothbrush': '🪥', 'Shampoo': '🧴', 'Conditioner': '🧴',
+    'Body Wash': '🧼', 'Soap': '🧼', 'Deodorant': '🧴', 'Sunscreen': '☀️',
+    'Milk': '🥛', 'Eggs': '🥚', 'Bread': '🍞', 'Butter': '🧈', 'Cheese': '🧀',
+    'Salmon': '🐟', 'Chicken Breast': '🍗', 'Beef': '🥩', 'Apples': '🍎',
+    'Bananas': '🍌', 'Oranges': '🍊', 'Tomatoes': '🍅', 'Potatoes': '🥔',
+    'Rice': '🍚', 'Pasta': '🍝', 'Olive Oil': '🫙', 'Coffee Beans': '☕',
+    'Chocolate Bar': '🍫', 'Chips': '🍟', 'Popcorn': '🍿', 'Cola': '🥤',
+    'Beer (6-pack)': '🍺', 'Red Wine': '🍷', 'White Wine': '🍾',
+    'Laptop': '💻', 'Smartphone': '📱', 'Headphones': '🎧', 'Smartwatch': '⌚',
+    'Camera': '📷', 'Tablet': '📱', 'Gaming Console': '🎮', 'Router': '📡',
+    'Drill': '🔩', 'Hammer': '🔨', 'Level': '📏', 'Duct Tape': '🎞️',
+    'Aquarium Filter': '🐠', 'Dog Bed': '🛌', 'Cat Tree': '🐈',
+    'Plates Set': '🍽️', 'Wine Glasses': '🍷', 'Coffee Maker': '☕', 'Blender': '🥤',
+    'Air Fryer': '🍳', 'Mop': '🧹', 'Broom': '🧹', 'Dish Soap': '🧼',
+    'T-Shirt': '👕', 'Shorts': '🩳', 'Sweater': '🧶', 'Belt': '🏷️',
 }
 
 def get_emoji(name, category):
@@ -194,7 +210,17 @@ def seed_products():
 # ─── Lifecycle ───────────────────────────────────────────────────────────────
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    Base.metadata.create_all(bind=engine)
+    from sqlalchemy.exc import OperationalError
+    try:
+        Base.metadata.create_all(bind=engine)
+        # Verify schema by trying a simple query
+        with SessionLocal() as db:
+            db.query(Product).first()
+    except OperationalError:
+        print("[DB] Schema mismatch detected. Recreating database...")
+        Base.metadata.drop_all(bind=engine)
+        Base.metadata.create_all(bind=engine)
+        
     seed_products()
     load_ml_rules()
     print("[START] FastAPI ready on http://localhost:8000")
@@ -202,6 +228,15 @@ async def lifespan(app: FastAPI):
     yield
 
 app = FastAPI(title="Smart AI Manager API", version="2.0", lifespan=lifespan)
+
+# ─── CORS Configuration ──────────────────────────────────────────────────────
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # For development; refine for production
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # ─── Pydantic schemas ────────────────────────────────────────────────────────
 class CouponRequest(BaseModel):
@@ -268,7 +303,7 @@ def add_product(req: AddProductRequest):
         existing = db.query(Product).filter(Product.name.ilike(req.name)).first()
         if existing:
             raise HTTPException(status_code=400, detail="Product already exists")
-        exp = date.fromisoformat(req.expiry_date) if req.expiry_date else None
+        exp = date.fromisoformat(req.expiry_date) if (req.expiry_date and req.expiry_date.strip()) else None
         new_id = (db.query(Product).count() or 0) + 1000
         p = Product(
             id=new_id, name=req.name, category=req.category,
@@ -286,7 +321,7 @@ def update_product(product_id: int, req: UpdateProductRequest):
         if req.stock is not None: p.stock = req.stock
         if req.price is not None: p.price = req.price
         if req.expiry_date is not None:
-            p.expiry_date = date.fromisoformat(req.expiry_date)
+            p.expiry_date = date.fromisoformat(req.expiry_date) if req.expiry_date.strip() else None
         db.commit()
         return {"success": True}
 
@@ -417,3 +452,7 @@ def serve_frontend(full_path: str):
     if os.path.exists(index):
         return FileResponse(index)
     return {"message": "Run 'npm run build' to serve frontend"}
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
