@@ -275,7 +275,6 @@ export default function App() {
   const NAVIGATION_ITEMS = [
     { text: 'Dashboard', icon: <DashboardIcon />, view: 'Dashboard' },
     { text: 'Inventory Management', icon: <InventoryIcon />, view: 'Inventory' },
-    { text: 'Sales Analytics', icon: <BarChartIcon />, view: 'Sales' },
     { text: 'AI Autonomous Feed', icon: <NotificationsActive />, view: 'AIDecisions' },
     { text: 'Product Expiry Timeline', icon: <AccessTimeIcon />, view: 'ProductExpiry' },
     { text: 'Restocking Intelligence', icon: <RestockIcon />, view: 'Restocking' },
@@ -1123,101 +1122,7 @@ export default function App() {
           </Box>
         )}
 
-        {activeView === 'Sales' && (
-          <Box>
-            {analytics ? (
-              <Grid container spacing={3}>
-                <Grid item xs={12} md={6}>
-                  <Card>
-                    <CardContent sx={{ p: 3 }}>
-                      <Typography variant="h6" fontWeight="bold" mb={2}>Category Inventory Turnover Ratio</Typography>
-                      <Box height={300}>
-                        <ResponsiveContainer width="100%" height="100%">
-                          <BarChart data={analytics.turnoverByCategory}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                            <XAxis dataKey="category" stroke="rgba(255,255,255,0.4)" />
-                            <YAxis stroke="rgba(255,255,255,0.4)" />
-                            <RechartsTooltip contentStyle={{ backgroundColor: '#1e293b', border: 'none' }} />
-                            <Bar dataKey="turnover" name="Turnover Multiplier" fill="#7c3aed" radius={[4, 4, 0, 0]}>
-                              {analytics.turnoverByCategory.map((entry, index) => (
-                                <Cell key={`cell-${index}`} fill={['#a78bfa', '#8b5cf6', '#7c3aed', '#6d28d9', '#5b21b6', '#4c1d95'][index % 6]} />
-                              ))}
-                            </Bar>
-                          </BarChart>
-                        </ResponsiveContainer>
-                      </Box>
-                    </CardContent>
-                  </Card>
-                </Grid>
 
-                <Grid item xs={12} md={6}>
-                  <Card sx={{ height: '100%' }}>
-                    <CardContent sx={{ p: 3 }}>
-                      <Typography variant="h6" fontWeight="bold" mb={2}>Waste Saved via AI Autopricing (INR)</Typography>
-                      <Box display="flex" justifyContent="center" alignItems="center" height={250}>
-                        <ResponsiveContainer width="100%" height="100%">
-                          <PieChart>
-                            <Pie 
-                              data={analytics.wasteMetrics.byCategory} 
-                              cx="50%" 
-                              cy="50%" 
-                              innerRadius={60} 
-                              outerRadius={90} 
-                              paddingAngle={4} 
-                              dataKey="value"
-                            >
-                              {analytics.wasteMetrics.byCategory.map((entry, index) => (
-                                <Cell key={`cell-${index}`} fill={['#10b981', '#7c3aed', '#f59e0b', '#ef4444'][index % 4]} />
-                              ))}
-                            </Pie>
-                            <RechartsTooltip />
-                            <Legend />
-                          </PieChart>
-                        </ResponsiveContainer>
-                      </Box>
-                      <Box display="flex" justifyContent="space-around" mt={2} textAlign="center">
-                        <Box>
-                          <Typography variant="h6" fontWeight="bold">₹{analytics.wasteMetrics.totalSaved_INR}</Typography>
-                          <Typography variant="caption" color="text.secondary">Total Revenue Saved</Typography>
-                        </Box>
-                        <Box>
-                          <Typography variant="h6" fontWeight="bold">{analytics.wasteMetrics.savedWeight_kg} kg</Typography>
-                          <Typography variant="caption" color="text.secondary">Biomass Waste Diverted</Typography>
-                        </Box>
-                      </Box>
-                    </CardContent>
-                  </Card>
-                </Grid>
-
-                <Grid item xs={12}>
-                  <Card>
-                    <CardContent sx={{ p: 3 }}>
-                      <Typography variant="h6" fontWeight="bold" mb={1}>Hourly Store Sales Heatmap Intensity</Typography>
-                      <Typography variant="caption" color="text.secondary" display="block" mb={3}>
-                        Redder blocks indicate extreme shopping spikes and immediate shelf stockout risks.
-                      </Typography>
-                      <Grid container spacing={1}>
-                        {Array.from({ length: 24 }).map((_, i) => {
-                          const intensity = Math.round(15 + Math.sin(i / 3) * 60 + randomIntFromId(i, 5, 20));
-                          const color = intensity > 70 ? `rgba(239, 68, 68, ${intensity/100})` : 
-                                        intensity > 40 ? `rgba(245, 158, 11, ${intensity/100})` : `rgba(16, 185, 129, ${intensity/100})`;
-                          return (
-                            <Grid item xs={3} sm={1.5} key={i}>
-                              <Box sx={{ bgcolor: color, py: 2, textAlign: 'center', borderRadius: 2, border: '1px solid rgba(255,255,255,0.05)' }}>
-                                <Typography variant="subtitle2" fontWeight="bold">{i}:00</Typography>
-                                <Typography variant="caption" sx={{ fontSize: 10 }}>{intensity}%</Typography>
-                              </Box>
-                            </Grid>
-                          );
-                        })}
-                      </Grid>
-                    </CardContent>
-                  </Card>
-                </Grid>
-              </Grid>
-            ) : <CircularProgress />}
-          </Box>
-        )}
 
         {activeView === 'AIDecisions' && (
           <Box>
