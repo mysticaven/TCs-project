@@ -170,7 +170,14 @@ function AiDealModal({ coupon, products, onAccept, onDecline }) {
   }, [onDecline]);
 
   const prod = products.find(p => p.name === coupon.recommendation);
-  const imageData = prod ? GET_IMAGE(prod.name, prod.category) : { emoji: '📦', url: '' };
+  const displayProd = prod || {
+    id: Math.floor(Math.random() * 90000) + 10000,
+    name: coupon.recommendation,
+    category: 'Groceries',
+    price: coupon.original_price,
+    discount: parseFloat(coupon.discount_text) || 20
+  };
+  const imageData = GET_IMAGE(displayProd.name, displayProd.category);
 
   return (
     <div style={{
@@ -214,75 +221,73 @@ function AiDealModal({ coupon, products, onAccept, onDecline }) {
         </div>
 
         <div style={{ padding: 32 }}>
-          {prod && (
+          <div style={{
+            background: '#F9FAFB',
+            borderRadius: 18,
+            padding: 20,
+            marginBottom: 24,
+            border: `1px solid ${COLORS.border}`,
+            display: 'flex',
+            gap: 18,
+            alignItems: 'center'
+          }}>
+            {/* Product Image */}
             <div style={{
-              background: '#F9FAFB',
-              borderRadius: 18,
-              padding: 20,
-              marginBottom: 24,
-              border: `1px solid ${COLORS.border}`,
-              display: 'flex',
-              gap: 18,
-              alignItems: 'center'
+              width: 100,
+              height: 100,
+              background: COLORS.cardBg,
+              borderRadius: 14,
+              flexShrink: 0,
+              border: `2px solid ${COLORS.primary}`,
+              boxShadow: '0 4px 12px rgba(37, 99, 235, 0.1)'
             }}>
-              {/* Product Image */}
-              <div style={{
-                width: 100,
-                height: 100,
-                background: COLORS.cardBg,
-                borderRadius: 14,
-                flexShrink: 0,
-                border: `2px solid ${COLORS.primary}`,
-                boxShadow: '0 4px 12px rgba(37, 99, 235, 0.1)'
-              }}>
-                <ImageWithFallback
-                  url={imageData.url}
-                  emoji={imageData.emoji}
-                  alt={prod.name}
-                />
-              </div>
+              <ImageWithFallback
+                url={imageData.url}
+                emoji={imageData.emoji}
+                alt={displayProd.name}
+              />
+            </div>
 
-              {/* Product Details */}
-              <div style={{ flex: 1 }}>
-                <div style={{
-                  fontSize: 11,
+            {/* Product Details */}
+            <div style={{ flex: 1 }}>
+              <div style={{
+                fontSize: 11,
+                color: COLORS.textSecondary,
+                fontWeight: 900,
+                textTransform: 'uppercase',
+                letterSpacing: '1px',
+                marginBottom: 6
+              }}>
+                {displayProd.category}
+              </div>
+              <div style={{
+                fontSize: 18,
+                fontWeight: 900,
+                color: COLORS.text,
+                marginBottom: 10,
+                lineHeight: 1.3
+              }}>
+                {displayProd.name}
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <span style={{
+                  textDecoration: 'line-through',
                   color: COLORS.textSecondary,
-                  fontWeight: 900,
-                  textTransform: 'uppercase',
-                  letterSpacing: '1px',
-                  marginBottom: 6
+                  fontSize: 15
                 }}>
-                  {prod.category}
-                </div>
-                <div style={{
-                  fontSize: 18,
+                  ₹{(displayProd.price * 1.15).toFixed(0)}
+                </span>
+                <span style={{
+                  color: COLORS.danger,
                   fontWeight: 900,
-                  color: COLORS.text,
-                  marginBottom: 10,
-                  lineHeight: 1.3
+                  fontSize: 24,
+                  letterSpacing: '-0.5px'
                 }}>
-                  {prod.name}
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <span style={{
-                    textDecoration: 'line-through',
-                    color: COLORS.textSecondary,
-                    fontSize: 15
-                  }}>
-                    ₹{(prod.price * 1.15).toFixed(0)}
-                  </span>
-                  <span style={{
-                    color: COLORS.danger,
-                    fontWeight: 900,
-                    fontSize: 24,
-                    letterSpacing: '-0.5px'
-                  }}>
-                    ₹{coupon.discount_price}
-                  </span>
-                </div>
+                  ₹{coupon.discount_price}
+                </span>
               </div>
             </div>
-          )}
+          </div>
 
           {/* Message */}
           <div style={{
@@ -323,7 +328,7 @@ function AiDealModal({ coupon, products, onAccept, onDecline }) {
               Not Now
             </button>
             <button
-              onClick={() => onAccept(prod, coupon.discount_price)}
+              onClick={() => onAccept(displayProd, coupon.discount_price)}
               style={{
                 flex: 1.4,
                 padding: '14px 0',
@@ -576,6 +581,23 @@ export default function UserCheckout() {
 
   const categories = ['All', ...new Set(products.map(p => p.category))];
 
+  const finishCheckout = async (finalCart, couponShownName, accepted) => {
+    try {
+      await fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          cart: finalCart,
+          coupon_shown: couponShownName,
+          coupon_accepted: accepted
+        })
+      });
+    } catch (e) {
+      console.error(e);
+    }
+    setOrderDone(true);
+  };
+
   const startCheckout = async () => {
     if (cart.length === 0) return;
     setCheckingDeals(true);
@@ -588,22 +610,18 @@ export default function UserCheckout() {
         body: JSON.stringify({ cart: cart.map(i => i.name) })
       });
       const data = await res.json();
-      if (data.coupon) setCoupon(data.coupon); // show the AI modal
+      setCheckingDeals(false);
 
-      // Save transaction to DB
-      await fetch('/api/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          cart,
-          coupon_shown: data.coupon?.recommendation || null,
-          coupon_accepted: false
-        })
-      }).catch(() => {});
-    } catch (e) { }
-
-    setCheckingDeals(false);
-    setOrderDone(true);
+      if (data.coupon) {
+        setCoupon(data.coupon); // show the AI modal
+      } else {
+        // No coupon available, complete checkout immediately
+        finishCheckout(cart, null, false);
+      }
+    } catch (e) {
+      setCheckingDeals(false);
+      finishCheckout(cart, null, false);
+    }
   };
 
   // Order Complete Screen
@@ -1190,10 +1208,21 @@ export default function UserCheckout() {
           coupon={coupon}
           products={products}
           onAccept={(prod, price) => {
-            setCart(prev => [...prev, { ...prod, qty: 1, price }]);
+            const updatedCart = [...cart];
+            const exists = updatedCart.find(i => i.id === prod.id);
+            if (exists) {
+              updatedCart.push({ ...prod, id: prod.id + 100000, qty: 1, price: price });
+            } else {
+              updatedCart.push({ ...prod, qty: 1, price: price });
+            }
+            setCart(updatedCart);
             setCoupon(null);
+            finishCheckout(updatedCart, coupon.recommendation, true);
           }}
-          onDecline={() => setCoupon(null)}
+          onDecline={() => {
+            setCoupon(null);
+            finishCheckout(cart, coupon.recommendation, false);
+          }}
         />
       )}
     </div>
