@@ -40,6 +40,7 @@ export default function App() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [toast, setToast] = useState({ open: false, message: '', severity: 'success' });
   const [activeView, setActiveView] = useState('Dashboard');
+  const [viewMode, setViewMode] = useState('Operations'); // 'Operations' or 'Executive'
   
   const [kpi, setKpi] = useState({ liveRevenue: 0, totalTransactions: 0, couponsAccepted: 0, expiringProducts: 0, lowStockAlerts: 0, wasteRiskLevel: 'Low' });
   const [recommendations, setRecommendations] = useState([]);
@@ -319,17 +320,29 @@ export default function App() {
       </List>
       <Divider sx={{ opacity: 0.1 }} />
       <Box sx={{ p: 2 }}>
-        <Card sx={{ bgcolor: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
+        <Card sx={{ bgcolor: 'rgba(7, 16, 40, 0.6)', border: '1px solid rgba(255, 255, 255, 0.05)', backdropFilter: 'blur(8px)' }}>
           <CardContent sx={{ py: 1.5, px: 2, '&:last-child': { pb: 1.5 } }}>
-            <Box display="flex" alignItems="center" gap={1.5}>
-              <Box sx={{ width: 10, height: 10, borderRadius: '50%', bgcolor: 'success.main', animation: 'pulse 1.5s infinite' }} />
-              <Box>
-                <Typography variant="caption" color="success.light" fontWeight="bold" display="block">
-                  AI Superintendent
-                </Typography>
-                <Typography variant="caption" color="text.secondary" sx={{ fontSize: 10 }}>
-                  Active & Tracking 5000+ Items
-                </Typography>
+            <Box display="flex" flexDirection="column" gap={1}>
+              <Box display="flex" alignItems="center" justifyContent="space-between">
+                <Typography sx={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.7)' }}>AI CORE</Typography>
+                <Box display="flex" alignItems="center" gap={0.5}>
+                  <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#10B981', animation: 'pulse 1.5s infinite' }} />
+                  <Typography sx={{ fontSize: 10, fontWeight: 800, color: '#10B981' }}>ACTIVE</Typography>
+                </Box>
+              </Box>
+              <Box display="flex" alignItems="center" justifyContent="space-between">
+                <Typography sx={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.7)' }}>ML PIPELINE</Typography>
+                <Box display="flex" alignItems="center" gap={0.5}>
+                  <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#10B981', animation: 'pulse 1.5s infinite' }} />
+                  <Typography sx={{ fontSize: 10, fontWeight: 800, color: '#10B981' }}>HEALTHY</Typography>
+                </Box>
+              </Box>
+              <Box display="flex" alignItems="center" justifyContent="space-between">
+                <Typography sx={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.7)' }}>SENSOR GRID</Typography>
+                <Box display="flex" alignItems="center" gap={0.5}>
+                  <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#10B981', animation: 'pulse 1.5s infinite' }} />
+                  <Typography sx={{ fontSize: 10, fontWeight: 800, color: '#10B981' }}>ONLINE</Typography>
+                </Box>
               </Box>
             </Box>
           </CardContent>
@@ -391,180 +404,542 @@ export default function App() {
         {activeView === 'Checkout' && <UserCheckout />}
 
         {activeView === 'Dashboard' && (
-          <Grid container spacing={3}>
-            <Grid item xs={12} sm={6} md={3}>
-              <Card sx={{ background: 'linear-gradient(135deg, rgba(124, 58, 237, 0.2), rgba(124, 58, 237, 0.05))', height: '100%' }}>
-                <CardContent sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 3 }}>
-                  <Box>
-                    <Typography color="text.secondary" variant="subtitle2" fontWeight="bold">Live Revenue</Typography>
-                    <Typography variant="h4" fontWeight="bold" mt={1}>₹{kpi.liveRevenue.toLocaleString()}</Typography>
-                    <Typography variant="caption" color="success.main" display="block" sx={{ mt: 1 }}>+12.4% vs forecast</Typography>
-                  </Box>
-                  <Avatar sx={{ bgcolor: 'primary.main', width: 52, height: 52 }}><AttachMoney /></Avatar>
-                </CardContent>
-              </Card>
-            </Grid>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
             
-            <Grid item xs={12} sm={6} md={3}>
-              <Card sx={{ height: '100%' }}>
-                <CardContent sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 3 }}>
-                  <Box>
-                    <Typography color="text.secondary" variant="subtitle2" fontWeight="bold">Store Occupancy</Typography>
-                    <Typography variant="h4" fontWeight="bold" mt={1}>{kpi.occupancyRate}%</Typography>
-                    <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 1 }}>Target: 80% baseline</Typography>
-                  </Box>
-                  <Avatar sx={{ bgcolor: 'secondary.main', width: 52, height: 52 }}><Timeline /></Avatar>
-                </CardContent>
-              </Card>
-            </Grid>
-
-            <Grid item xs={12} sm={6} md={3}>
-              <Card sx={{ height: '100%', background: kpi.wasteRiskLevel === 'High' ? 'linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(239, 68, 68, 0.05))' : 'default' }}>
-                <CardContent sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 3 }}>
-                  <Box>
-                    <Typography color="text.secondary" variant="subtitle2" fontWeight="bold">Near Expiry Items</Typography>
-                    <Typography variant="h4" fontWeight="bold" mt={1} color={kpi.wasteRiskLevel === 'High' ? 'error.main' : 'inherit'}>
-                      {kpi.expiringProducts}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 1 }}>Expiring in &lt; 3 days</Typography>
-                  </Box>
-                  <Avatar sx={{ bgcolor: kpi.wasteRiskLevel === 'High' ? 'error.main' : 'warning.main', width: 52, height: 52 }}><WarningAmber /></Avatar>
-                </CardContent>
-              </Card>
-            </Grid>
-
-            <Grid item xs={12} sm={6} md={3}>
-              <Card sx={{ height: '100%' }}>
-                <CardContent sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 3 }}>
-                  <Box>
-                    <Typography color="text.secondary" variant="subtitle2" fontWeight="bold">Low Stock Alerts</Typography>
-                    <Typography variant="h4" fontWeight="bold" mt={1} color={kpi.lowStockAlerts > 0 ? 'warning.main' : 'inherit'}>
-                      {kpi.lowStockAlerts}
-                    </Typography>
-                    <Typography variant="caption" color="success.main" display="block" sx={{ mt: 1 }}>PO Auto-restock active</Typography>
-                  </Box>
-                  <Avatar sx={{ bgcolor: kpi.lowStockAlerts > 0 ? 'warning.main' : 'success.main', width: 52, height: 52 }}><RestockIcon /></Avatar>
-                </CardContent>
-              </Card>
-            </Grid>
-
-            {/* AI Automated Execution Alert / Actions Feed */}
-            <Grid item xs={12} lg={4}>
-              <Box display="flex" alignItems="center" gap={1} mb={2} mt={1}>
-                <Box sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: 'success.main', animation: 'pulse 1.5s infinite' }} />
-                <Typography variant="h6" fontWeight="800">AI Agent Live Operations</Typography>
+            {/* VIEW MODE TOGGLE & HEADER ACTIONS (Item 17) */}
+            <Box display="flex" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={2} sx={{ bgcolor: '#111827', p: 1.5, borderRadius: 3, border: '1px solid rgba(255,255,255,0.05)' }}>
+              <Box display="flex" gap={1}>
+                <Button 
+                  variant={viewMode === 'Operations' ? 'contained' : 'outlined'} 
+                  size="small" 
+                  onClick={() => setViewMode('Operations')}
+                  sx={{ 
+                    bgcolor: viewMode === 'Operations' ? '#8B5CF6' : 'transparent',
+                    borderColor: '#8B5CF6',
+                    color: '#fff',
+                    '&:hover': { bgcolor: viewMode === 'Operations' ? '#7C3AED' : 'rgba(139, 92, 246, 0.1)' }
+                  }}
+                >
+                  ⚙️ Operations Console
+                </Button>
+                <Button 
+                  variant={viewMode === 'Executive' ? 'contained' : 'outlined'} 
+                  size="small" 
+                  onClick={() => setViewMode('Executive')}
+                  sx={{ 
+                    bgcolor: viewMode === 'Executive' ? '#06B6D4' : 'transparent',
+                    borderColor: '#06B6D4',
+                    color: '#fff',
+                    '&:hover': { bgcolor: viewMode === 'Executive' ? '#0891B2' : 'rgba(6, 182, 212, 0.1)' }
+                  }}
+                >
+                  💼 Executive Hub
+                </Button>
               </Box>
-              
-              <Alert icon={<CheckCircle fontSize="inherit" />} severity="success" sx={{ mb: 2, borderRadius: 2 }}>
-                <Typography variant="subtitle2" fontWeight="bold">Fully Automated Dynamic Systems Active</Typography>
-                <Typography variant="caption" color="text.secondary" display="block">No human approval required. AI Superintendent is executing discounts and PO replenishment orders autonomously in the background.</Typography>
-              </Alert>
+              <Box display="flex" alignItems="center" gap={1}>
+                <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: '#10B981', animation: 'pulse 1.5s infinite' }} />
+                <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.7)', fontWeight: 'bold' }}>
+                  REAL-TIME SIMULATION ACTIVE • REFRESH 5S
+                </Typography>
+              </Box>
+            </Box>
 
-              <Box display="flex" flexDirection="column" gap={2} sx={{ maxHeight: 500, overflowY: 'auto', pr: 0.5 }}>
-                {recommendations.slice(0, 8).map(rec => (
-                  <Fade in key={rec.id}>
-                    <Card sx={{ borderLeft: `4px solid ${theme.palette.success.main}`, bgcolor: 'background.paper' }}>
-                      <CardContent sx={{ p: 2 }}>
-                        <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={1}>
-                          <Chip label={rec.model} size="small" color="success" variant="outlined" sx={{ fontSize: 9, height: 18 }} />
-                          <Typography variant="caption" color="success.light" fontWeight="bold">
-                            Conf: {rec.confidence}%
-                          </Typography>
+            {/* HERO METRICS ROW (Item 3) */}
+            <Grid container spacing={2}>
+              {[
+                { 
+                  title: 'Live Revenue', 
+                  value: `₹${kpi.liveRevenue.toLocaleString()}`, 
+                  sub: '+12.4% vs forecast', 
+                  icon: <AttachMoney sx={{ color: '#8B5CF6' }} />,
+                  trend: 'up', 
+                  conf: '94%',
+                  sparkColor: '#8B5CF6',
+                  data: [100, 110, 105, 120, 130, 124] 
+                },
+                { 
+                  title: 'AI Waste Saved', 
+                  value: `₹${analytics?.wasteMetrics?.totalSaved_INR?.toLocaleString() || '12,450'}`, 
+                  sub: `${analytics?.wasteMetrics?.savedWeight_kg || '240'}kg diverted`, 
+                  icon: <NotificationsActive sx={{ color: '#06B6D4' }} />, 
+                  trend: 'up', 
+                  conf: '97%',
+                  sparkColor: '#06B6D4',
+                  data: [80, 95, 110, 120, 135, 140] 
+                },
+                { 
+                  title: 'Active AI Decisions', 
+                  value: recommendations.length, 
+                  sub: '100% autonomous', 
+                  icon: <BrainIcon sx={{ color: '#10B981' }} />, 
+                  trend: 'up', 
+                  conf: '99%',
+                  sparkColor: '#10B981',
+                  data: [10, 14, 18, 22, 24, 28]
+                },
+                { 
+                  title: 'Inventory Health', 
+                  value: `${kpi.wasteRiskLevel === 'High' ? '82.4%' : '94.8%'}`, 
+                  sub: `${kpi.expiringProducts} near expiry items`, 
+                  icon: <InventoryIcon sx={{ color: kpi.wasteRiskLevel === 'High' ? '#EF4444' : '#10B981' }} />, 
+                  trend: kpi.wasteRiskLevel === 'High' ? 'down' : 'up',
+                  conf: '96%',
+                  sparkColor: kpi.wasteRiskLevel === 'High' ? '#EF4444' : '#10B981',
+                  data: [96, 95, 94, 93, 94, 95]
+                },
+                { 
+                  title: 'Store Traffic', 
+                  value: `${kpi.occupancyRate}%`, 
+                  sub: 'Capacity optimization', 
+                  icon: <Timeline sx={{ color: '#F59E0B' }} />, 
+                  trend: 'up', 
+                  conf: '93%',
+                  sparkColor: '#F59E0B',
+                  data: [65, 70, 75, 80, 82, 85]
+                },
+                { 
+                  title: 'Prediction Accuracy', 
+                  value: '94.2%', 
+                  sub: 'Random Forest Model', 
+                  icon: <HardwareIcon sx={{ color: '#06B6D4' }} />, 
+                  trend: 'stable', 
+                  conf: '100%',
+                  sparkColor: '#06B6D4',
+                  data: [94, 94, 94, 94, 94, 94]
+                }
+              ].map((card, idx) => (
+                <Grid item xs={12} sm={6} md={4} lg={2} key={idx}>
+                  <Card sx={{ bgcolor: '#111827', border: '1px solid rgba(255,255,255,0.05)', position: 'relative', overflow: 'hidden' }}>
+                    <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+                      <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
+                        <Typography sx={{ fontSize: 11, fontWeight: 700, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                          {card.title}
+                        </Typography>
+                        <Avatar sx={{ bgcolor: 'rgba(255,255,255,0.03)', width: 28, height: 28 }}>
+                          {card.icon}
+                        </Avatar>
+                      </Box>
+                      <Box display="flex" alignItems="baseline" gap={1}>
+                        <Typography variant="h6" fontWeight="950" sx={{ letterSpacing: '-0.5px' }}>{card.value}</Typography>
+                        <Typography sx={{ fontSize: 10, fontWeight: 800, color: card.trend === 'up' ? '#10B981' : card.trend === 'down' ? '#EF4444' : 'text.secondary' }}>
+                          {card.trend === 'up' ? '↑' : card.trend === 'down' ? '↓' : '•'}
+                        </Typography>
+                      </Box>
+                      <Typography sx={{ fontSize: 10, color: 'text.secondary', display: 'block', mt: 0.5 }}>
+                        {card.sub}
+                      </Typography>
+                      
+                      {/* Mini Sparkline Graph */}
+                      <Box sx={{ height: 20, mt: 1 }}>
+                        <ResponsiveContainer width="100%" height="100%">
+                          <AreaChart data={card.data.map((v, i) => ({ i, v }))}>
+                            <Area type="monotone" dataKey="v" stroke={card.sparkColor} fill={card.sparkColor} fillOpacity={0.08} strokeWidth={1.5} dot={false} />
+                          </AreaChart>
+                        </ResponsiveContainer>
+                      </Box>
+
+                      {/* AI Confidence badge */}
+                      <Box display="flex" justifyContent="space-between" alignItems="center" mt={1} sx={{ pt: 0.5, borderTop: '1px solid rgba(255,255,255,0.03)' }}>
+                        <Typography sx={{ fontSize: 8, fontWeight: 700, color: 'rgba(255,255,255,0.4)' }}>CONFIDENCE</Typography>
+                        <Typography sx={{ fontSize: 8, fontWeight: 900, color: '#06B6D4' }}>{card.conf}</Typography>
+                      </Box>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              ))}
+            </Grid>
+
+            {/* OPERATIONS VIEW CONTENT (Item 17) */}
+            {viewMode === 'Operations' && (
+              <Grid container spacing={3}>
+                
+                {/* Left Side: Dense Real-time control systems (8/12 grid) */}
+                <Grid item xs={12} lg={8} container spacing={3}>
+                  
+                  {/* Digital Twin (Item 6) */}
+                  <Grid item xs={12}>
+                    <Card sx={{ bgcolor: '#111827', border: '1px solid rgba(255,255,255,0.05)' }}>
+                      <CardContent sx={{ p: 3 }}>
+                        <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                          <Box display="flex" alignItems="center" gap={1}>
+                            <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: '#06B6D4', animation: 'pulse 1.5s infinite' }} />
+                            <Typography variant="h6" fontWeight="bold">Digital Store Twin (Real-Time Shelf Activity & Hotspots)</Typography>
+                          </Box>
+                          <Chip label="Customer Flow: Simulated Live" size="small" sx={{ bgcolor: 'rgba(6, 182, 212, 0.1)', color: '#06B6D4', border: '1px solid rgba(6, 182, 212, 0.2)', fontSize: 10 }} />
                         </Box>
-                        <Typography variant="body2" color="error.light" sx={{ fontWeight: 800, mt: 1 }}>
-                          TRIGGER: {rec.trigger}
-                        </Typography>
-                        <Typography variant="body2" fontWeight="bold" sx={{ mt: 0.5, mb: 0.5, color: 'text.primary' }}>
-                          ACTION: {rec.action}
-                        </Typography>
-                        <Typography variant="caption" color="success.main" display="block" sx={{ fontWeight: 'bold', mb: 1.5 }}>
-                          IMPACT: {rec.impact}
-                        </Typography>
-                        <Box display="flex" alignItems="center" gap={1} sx={{ bgcolor: 'rgba(16, 185, 129, 0.05)', p: 1, borderRadius: 1 }}>
-                          <CheckCircle color="success" sx={{ fontSize: 16 }} />
-                          <Typography variant="caption" color="success.light" fontWeight="bold">
-                            ✓ Automatically Executed & DB Applied
-                          </Typography>
+                        
+                        {/* Simulation twin floorplan */}
+                        <Box sx={{ bgcolor: '#071028', border: '1px solid rgba(255,255,255,0.03)', borderRadius: 3, p: 3, display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(4, 1fr)' }, gap: 2, minHeight: 180 }}>
+                          {[
+                            { zone: 'A1 - FRESH PRODUCE', health: '94%', color: '#10B981', items: 'Fruits & Vegetables', status: 'Healthy Zone', pulse: true, coords: [{x: '20%', y: '40%'}, {x: '45%', y: '60%'}] },
+                            { zone: 'B2 - COLD ROOM', health: '82%', color: '#EF4444', items: 'Dairy & Meats', status: 'Temp Drift Alert', pulse: true, coords: [{x: '80%', y: '30%'}] },
+                            { zone: 'C3 - FROZEN DECK', health: '91%', color: '#F59E0B', items: 'Frozen Foods', status: 'Anomaly Spike', pulse: true, coords: [{x: '15%', y: '70%'}, {x: '75%', y: '80%'}] },
+                            { zone: 'D4 - BEVERAGE BLOCK', health: '97%', color: '#10B981', items: 'Drinks & Soda', status: 'Optimal Shelf', pulse: false, coords: [] }
+                          ].map((shelf, i) => (
+                            <Box key={i} sx={{ position: 'relative', bgcolor: 'rgba(255,255,255,0.01)', border: `1px solid rgba(255,255,255,0.04)`, borderTop: `4px solid ${shelf.color}`, borderRadius: 2, p: 2, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: 120 }}>
+                              <Box>
+                                <Typography sx={{ fontSize: 10, fontWeight: 900, color: 'text.secondary' }}>{shelf.zone}</Typography>
+                                <Typography sx={{ fontSize: 12, fontWeight: 800, mt: 0.5 }}>{shelf.items}</Typography>
+                              </Box>
+                              
+                              {/* Customer simulated dots */}
+                              {shelf.coords.map((c, idx) => (
+                                <Box key={idx} sx={{ position: 'absolute', left: c.x, top: c.y, width: 8, height: 8, borderRadius: '50%', bgcolor: '#06B6D4', animation: 'pulse 1.5s infinite', boxShadow: '0 0 8px #06B6D4' }} />
+                              ))}
+
+                              <Box display="flex" justifyContent="space-between" alignItems="center" mt={2}>
+                                <Typography sx={{ fontSize: 9, fontWeight: 700, color: shelf.color }}>{shelf.status}</Typography>
+                                <Typography sx={{ fontSize: 11, fontWeight: 950, color: '#fff' }}>{shelf.health}</Typography>
+                              </Box>
+                            </Box>
+                          ))}
                         </Box>
                       </CardContent>
                     </Card>
-                  </Fade>
-                ))}
-              </Box>
-            </Grid>
+                  </Grid>
 
-            {/* Charts Grid */}
-            <Grid item xs={12} lg={8} container spacing={3}>
-              <Grid item xs={12}>
-                <Card>
-                  <CardContent sx={{ p: 3 }}>
-                    <Typography variant="h6" fontWeight="bold" mb={2}>Store Sales: Real-Time vs ML Predictions</Typography>
-                    <Box height={300}>
-                      {analytics ? (
-                        <ResponsiveContainer width="100%" height="100%">
-                          <AreaChart data={analytics.salesTrends} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-                            <defs>
-                              <linearGradient id="colorActual" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="#7c3aed" stopOpacity={0.4}/>
-                                <stop offset="95%" stopColor="#7c3aed" stopOpacity={0}/>
-                              </linearGradient>
-                              <linearGradient id="colorPred" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="#10b981" stopOpacity={0.2}/>
-                                <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
-                              </linearGradient>
-                            </defs>
-                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                            <XAxis dataKey="time" stroke="rgba(255,255,255,0.4)" />
-                            <YAxis stroke="rgba(255,255,255,0.4)" />
-                            <RechartsTooltip contentStyle={{ backgroundColor: '#1e293b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px' }} />
-                            <Legend />
-                            <Area type="monotone" dataKey="actual" name="Actual Sales (₹)" stroke="#7c3aed" fillOpacity={1} fill="url(#colorActual)" strokeWidth={3} />
-                            <Area type="monotone" dataKey="predicted" name="AI Forecast (₹)" stroke="#10b981" fillOpacity={1} fill="url(#colorPred)" strokeWidth={2} strokeDasharray="5 5" />
-                          </AreaChart>
-                        </ResponsiveContainer>
-                      ) : <CircularProgress />}
-                    </Box>
-                  </CardContent>
-                </Card>
-              </Grid>
-
-              {/* Sensor Drift quick look */}
-              <Grid item xs={12}>
-                <Card sx={{ background: 'linear-gradient(180deg, #1e293b 0%, #0f172a 100%)' }}>
-                  <CardContent sx={{ p: 3 }}>
-                    <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-                      <Typography variant="h6" fontWeight="bold">Store IoT Cold Room Sensors</Typography>
-                      <Box display="flex" gap={2}>
-                        <Chip label={`Temp: ${sensorData.temperature} °C`} size="small" color="primary" />
-                        <Chip label={`Humidity: ${sensorData.humidity}%`} size="small" color="secondary" />
-                        <Chip label={`Gas: ${sensorData.gas_ppm} ppm`} size="small" color="warning" />
-                      </Box>
-                    </Box>
-                    <Typography variant="body2" color="text.secondary" mb={3}>
-                      IoT Stream dynamically adjusting temperature stability and humidity thresholds every 5 seconds.
-                    </Typography>
-                    <Box height={150}>
-                      {sensorHistory.length > 0 ? (
-                        <ResponsiveContainer width="100%" height="100%">
-                          <LineChart data={sensorHistory}>
-                            <XAxis dataKey="time" hide />
-                            <YAxis stroke="rgba(255,255,255,0.2)" />
-                            <RechartsTooltip />
-                            <Line type="monotone" dataKey="temp" name="Temperature (°C)" stroke="#7c3aed" strokeWidth={2} dot={false} />
-                            <Line type="monotone" dataKey="gas" name="Gas level (ppm)" stroke="#f59e0b" strokeWidth={2} dot={false} />
-                          </LineChart>
-                        </ResponsiveContainer>
-                      ) : (
-                        <Box display="flex" alignItems="center" justifyContent="center" height="100%">
-                          <Typography variant="caption" color="text.secondary">Awaiting IoT Sensor Stream connection...</Typography>
+                  {/* Real AI Sales Activity Timeline (Item 4) */}
+                  <Grid item xs={12}>
+                    <Card sx={{ bgcolor: '#111827', border: '1px solid rgba(255,255,255,0.05)' }}>
+                      <CardContent sx={{ p: 3 }}>
+                        <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                          <Typography variant="h6" fontWeight="bold">Real-Time Sales Activity Timeline (24-Hour Operations)</Typography>
+                          <Box display="flex" gap={1}>
+                            <Chip size="small" label="Live Current Hour" sx={{ bgcolor: '#8B5CF6', color: '#fff', fontSize: 9 }} />
+                            <Chip size="small" label="AI Predicted Spikes" sx={{ bgcolor: '#06B6D4', color: '#fff', fontSize: 9 }} />
+                          </Box>
                         </Box>
-                      )}
-                    </Box>
-                  </CardContent>
-                </Card>
+
+                        <Grid container spacing={1}>
+                          {Array.from({ length: 12 }).map((_, idx) => {
+                            const hr = (idx * 2 + 8) % 24;
+                            const isCurrent = hr === 20; // Simulated current time is 8 PM (20:00)
+                            const intensity = Math.round(30 + Math.sin(idx / 2) * 45 + (isCurrent ? 20 : Math.random() * 10));
+                            const predicted = Math.round(intensity * 1.1 + Math.sin(idx) * 8);
+                            const risk = intensity > 80 ? 'Restock Needed' : intensity > 50 ? 'Medium Shelf Risk' : 'Optimal';
+                            const blockColor = intensity > 75 ? 'rgba(239, 68, 68, 0.15)' : intensity > 45 ? 'rgba(245, 158, 11, 0.15)' : 'rgba(16, 185, 129, 0.15)';
+                            const borderGlow = intensity > 75 ? '1px solid #ef4444' : intensity > 45 ? '1px solid #f59e0b' : '1px solid #10b981';
+                            
+                            return (
+                              <Grid item xs={6} sm={3} md={2} key={idx}>
+                                <Tooltip title={
+                                  <Box sx={{ p: 1 }}>
+                                    <Typography variant="caption" display="block">Hour: <strong>{hr}:00</strong></Typography>
+                                    <Typography variant="caption" display="block">Intensity: <strong>{intensity}%</strong></Typography>
+                                    <Typography variant="caption" display="block">AI Forecasted: <strong>{predicted}%</strong></Typography>
+                                    <Typography variant="caption" display="block">Status: <strong>{risk}</strong></Typography>
+                                  </Box>
+                                } arrow>
+                                  <Box sx={{ 
+                                    bgcolor: blockColor, 
+                                    border: isCurrent ? '2px solid #8B5CF6' : borderGlow, 
+                                    py: 1.5, px: 2, 
+                                    textAlign: 'center', 
+                                    borderRadius: 3, 
+                                    position: 'relative',
+                                    cursor: 'pointer',
+                                    boxShadow: isCurrent ? '0 0 12px rgba(139, 92, 246, 0.4)' : 'none',
+                                    transition: 'all 0.2s',
+                                    '&:hover': { transform: 'translateY(-2px)' }
+                                  }}>
+                                    {isCurrent && (
+                                      <Box sx={{ position: 'absolute', top: 4, right: 4, width: 6, height: 6, borderRadius: '50%', bgcolor: '#8B5CF6', animation: 'pulse 1.5s infinite' }} />
+                                    )}
+                                    <Typography sx={{ fontSize: 12, fontWeight: 900, color: '#fff' }}>{hr}:00</Typography>
+                                    <Typography sx={{ fontSize: 10, fontWeight: 700, color: 'text.secondary', mt: 0.5 }}>
+                                      Sales: {intensity > 70 ? 'High' : intensity > 40 ? 'Moderate' : 'Low'}
+                                    </Typography>
+                                    <Typography sx={{ fontSize: 9, fontWeight: 800, color: 'rgba(255,255,255,0.4)', mt: 0.5 }}>
+                                      Pred: {predicted}%
+                                    </Typography>
+                                  </Box>
+                                </Tooltip>
+                              </Grid>
+                            );
+                          })}
+                        </Grid>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+
+                  {/* Dynamic Operations Charts (Item 8) */}
+                  <Grid item xs={12} md={6}>
+                    <Card sx={{ bgcolor: '#111827', border: '1px solid rgba(255,255,255,0.05)', height: '100%' }}>
+                      <CardContent sx={{ p: 3 }}>
+                        <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                          <Typography variant="h6" fontWeight="bold">Inventory Forecast & Depletion Curve</Typography>
+                          <Chip label="AI Forecast Overlay" size="small" variant="outlined" color="primary" sx={{ fontSize: 9, height: 18 }} />
+                        </Box>
+                        <Box height={200}>
+                          <ResponsiveContainer width="100%" height="100%">
+                            <AreaChart data={[
+                              { day: 'Day 1', actual: 480, forecast: 480, threshold: 120 },
+                              { day: 'Day 2', actual: 390, forecast: 410, threshold: 120 },
+                              { day: 'Day 3', actual: 290, forecast: 310, threshold: 120 },
+                              { day: 'Day 4', actual: 210, forecast: 220, threshold: 120 },
+                              { day: 'Day 5', actual: null, forecast: 140, threshold: 120 },
+                              { day: 'Day 6', actual: null, forecast: 80, threshold: 120 }
+                            ]}>
+                              <defs>
+                                <linearGradient id="colorActInv" x1="0" y1="0" x2="0" y2="1">
+                                  <stop offset="5%" stopColor="#8B5CF6" stopOpacity={0.2}/>
+                                  <stop offset="95%" stopColor="#8B5CF6" stopOpacity={0}/>
+                                </linearGradient>
+                              </defs>
+                              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                              <XAxis dataKey="day" stroke="rgba(255,255,255,0.4)" />
+                              <YAxis stroke="rgba(255,255,255,0.4)" />
+                              <RechartsTooltip />
+                              <Area type="monotone" dataKey="actual" name="Actual Shelf Quantity" stroke="#8B5CF6" strokeWidth={3} fill="url(#colorActInv)" />
+                              <Line type="monotone" dataKey="forecast" name="Predicted Depletion" stroke="#06B6D4" strokeWidth={2} strokeDasharray="5 5" dot={false} />
+                              <Line type="monotone" dataKey="threshold" name="PO Reorder Threshold" stroke="#EF4444" strokeWidth={1.5} strokeDasharray="3 3" dot={false} />
+                            </AreaChart>
+                          </ResponsiveContainer>
+                        </Box>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+
+                  <Grid item xs={12} md={6}>
+                    <Card sx={{ bgcolor: '#111827', border: '1px solid rgba(255,255,255,0.05)', height: '100%' }}>
+                      <CardContent sx={{ p: 3 }}>
+                        <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                          <Typography variant="h6" fontWeight="bold">Waste Analytics & Spoilage Prevention</Typography>
+                          <Chip label="INR Impact" size="small" variant="outlined" color="secondary" sx={{ fontSize: 9, height: 18 }} />
+                        </Box>
+                        <Box height={200}>
+                          {analytics ? (
+                            <ResponsiveContainer width="100%" height="100%">
+                              <AreaChart data={analytics.salesTrends}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                                <XAxis dataKey="time" stroke="rgba(255,255,255,0.4)" />
+                                <YAxis stroke="rgba(255,255,255,0.4)" />
+                                <RechartsTooltip />
+                                <Area type="monotone" dataKey="actual" name="Prevented Loss (₹)" stroke="#10B981" fillOpacity={0.1} fill="#10B981" strokeWidth={3} />
+                              </AreaChart>
+                            </ResponsiveContainer>
+                          ) : <CircularProgress />}
+                        </Box>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+
+                  {/* IoT Sensors (Item 9) */}
+                  <Grid item xs={12}>
+                    <Card sx={{ bgcolor: '#111827', border: '1px solid rgba(255,255,255,0.05)' }}>
+                      <CardContent sx={{ p: 3 }}>
+                        <Typography variant="h6" fontWeight="bold" mb={2}>Live Cold Room & Shelf IoT Telemetry Stream</Typography>
+                        
+                        <Grid container spacing={2}>
+                          {[
+                            { name: 'Cold Room Temperature', val: `${sensorData.temperature}°C`, color: '#8B5CF6', limit: '2°C - 6°C Bounds', pct: (sensorData.temperature/15)*100 },
+                            { name: 'Ambient Air Humidity', val: `${sensorData.humidity}%`, color: '#10B981', limit: '55% - 65% Optimal', pct: sensorData.humidity },
+                            { name: 'Organic Spoilage Gas', val: `${sensorData.gas_ppm} ppm`, color: '#F59E0B', limit: 'Alarm threshold: >600', pct: (sensorData.gas_ppm/1000)*100 },
+                            { name: 'Product acidity (pH)', val: sensorData.ph, color: '#EF4444', limit: 'Rotting threshold: <5.0', pct: (sensorData.ph/14)*100 }
+                          ].map((g, idx) => (
+                            <Grid item xs={12} sm={6} md={3} key={idx}>
+                              <Box sx={{ bgcolor: '#071028', p: 2, borderRadius: 3, border: '1px solid rgba(255,255,255,0.03)' }}>
+                                <Typography sx={{ fontSize: 11, fontWeight: 700, color: 'text.secondary' }}>{g.name}</Typography>
+                                <Typography variant="h4" fontWeight="bold" sx={{ color: g.color, mt: 1 }}>{g.val}</Typography>
+                                <LinearProgress variant="determinate" value={g.pct} sx={{ height: 6, borderRadius: 3, mt: 1.5, mb: 1, bgcolor: 'rgba(255,255,255,0.05)', '& .MuiLinearProgress-bar': { bgcolor: g.color } }} />
+                                <Typography sx={{ fontSize: 9, color: 'text.secondary' }}>{g.limit}</Typography>
+                              </Box>
+                            </Grid>
+                          ))}
+                        </Grid>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+
+                </Grid>
+
+                {/* Right Side: Floating AI Decision engines & Live Ops Stream (4/12 grid) */}
+                <Grid item xs={12} lg={4} container spacing={3}>
+                  
+                  {/* Floating AI Autonomous Feed (Item 5) */}
+                  <Grid item xs={12}>
+                    <Card sx={{ bgcolor: '#111827', border: '1px solid rgba(255,255,255,0.05)', position: 'relative' }}>
+                      <CardContent sx={{ p: 3 }}>
+                        <Box display="flex" alignItems="center" gap={1.5} mb={2}>
+                          <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: '#10B981', animation: 'pulse 1.5s infinite' }} />
+                          <Typography variant="h6" fontWeight="bold">AI Autonomous Action Stream</Typography>
+                        </Box>
+
+                        <Box display="flex" flexDirection="column" gap={2} sx={{ maxHeight: 420, overflowY: 'auto', pr: 0.5 }}>
+                          {recommendations.map(rec => (
+                            <Fade in key={rec.id}>
+                              <Box sx={{ 
+                                bgcolor: '#071028', 
+                                borderLeft: `4px solid ${rec.status === 'replenished' ? '#F59E0B' : '#10B981'}`, 
+                                p: 2, 
+                                borderRadius: 2,
+                                borderTop: '1px solid rgba(255,255,255,0.03)',
+                                borderRight: '1px solid rgba(255,255,255,0.03)',
+                                borderBottom: '1px solid rgba(255,255,255,0.03)'
+                              }}>
+                                <Box display="flex" justifyContent="space-between" mb={1}>
+                                  <Chip label={rec.model} size="small" sx={{ height: 16, fontSize: 8, bgcolor: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.7)' }} />
+                                  <Typography sx={{ fontSize: 9, fontWeight: 900, color: '#10B981' }}>CONF: {rec.confidence}%</Typography>
+                                </Box>
+                                <Typography sx={{ fontSize: 11, color: '#EF4444', fontWeight: 800 }}>TRIGGER: {rec.trigger}</Typography>
+                                <Typography sx={{ fontSize: 12, fontWeight: 800, mt: 0.5, color: '#fff' }}>ACTION: {rec.action}</Typography>
+                                <Typography sx={{ fontSize: 10, color: '#10B981', fontWeight: 700, mt: 0.5 }}>IMPACT: {rec.impact}</Typography>
+                                <Box display="flex" alignItems="center" gap={0.5} sx={{ mt: 1.5, pt: 1, borderTop: '1px solid rgba(255,255,255,0.03)' }}>
+                                  <CheckCircle sx={{ fontSize: 12, color: '#10B981' }} />
+                                  <Typography sx={{ fontSize: 9, color: '#10B981', fontWeight: 800 }}>AUTO-APPLIED SUCCESSFULLY</Typography>
+                                </Box>
+                              </Box>
+                            </Fade>
+                          ))}
+                        </Box>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+
+                  {/* AI Explainability & Pricing Optimization Panel (Item 14) */}
+                  <Grid item xs={12}>
+                    <Card sx={{ bgcolor: '#111827', border: '1px solid rgba(255,255,255,0.05)' }}>
+                      <CardContent sx={{ p: 3 }}>
+                        <Box display="flex" alignItems="center" gap={1.5} mb={2}>
+                          <BrainIcon sx={{ color: '#8B5CF6' }} />
+                          <Typography variant="h6" fontWeight="bold">AI Decision Explainability (SHAP)</Typography>
+                        </Box>
+
+                        <Box display="flex" flexDirection="column" gap={2}>
+                          {[
+                            { name: 'Fresh Salad Cups', action: 'Promoted to clearance shelf', why: 'Tomatoes & Lettuce promoted because: Overstock (34%), Expiry Risk (High), Demand Forecast (Low)', savings: '₹4,500 expected saving', conf: '94%' },
+                            { name: 'Greek Organic Yogurt', action: 'Discount increased to 22%', why: 'Yogurt flagged because: Expiry <48h, Temperature drift recorded (+2.4°C)', savings: '₹2,450 waste saved', conf: '96%' },
+                            { name: 'Classic Blueberries Select', action: 'Direct coupon recommendation', why: 'Blueberry up-sell recommended because: Customer shopping cart contains Almond Milk (88% Correlation mined)', savings: '+12% Basket conversion', conf: '98%' }
+                          ].map((item, idx) => (
+                            <Box key={idx} sx={{ bgcolor: '#071028', p: 2, borderRadius: 2, border: '1px solid rgba(255,255,255,0.03)' }}>
+                              <Box display="flex" justifyContent="space-between" mb={0.5}>
+                                <Typography sx={{ fontSize: 12, fontWeight: 900, color: '#8B5CF6' }}>{item.name}</Typography>
+                                <Typography sx={{ fontSize: 9, fontWeight: 950, color: '#06B6D4' }}>{item.conf}</Typography>
+                              </Box>
+                              <Typography sx={{ fontSize: 10, fontWeight: 800, color: 'text.primary', mb: 1 }}>{item.action}</Typography>
+                              <Typography sx={{ fontSize: 10, color: 'text.secondary', display: 'block', mb: 1 }}>
+                                {item.why}
+                              </Typography>
+                              <Typography sx={{ fontSize: 10, color: '#10B981', fontWeight: 800 }}>
+                                {item.savings}
+                              </Typography>
+                            </Box>
+                          ))}
+                        </Box>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+
+                  {/* Customer Intelligence Basket Correlation (Item 12) */}
+                  <Grid item xs={12}>
+                    <Card sx={{ bgcolor: '#111827', border: '1px solid rgba(255,255,255,0.05)' }}>
+                      <CardContent sx={{ p: 3 }}>
+                        <Box display="flex" alignItems="center" gap={1.5} mb={2}>
+                          <Timeline sx={{ color: '#06B6D4' }} />
+                          <Typography variant="h6" fontWeight="bold">Customer Basket Intelligence</Typography>
+                        </Box>
+
+                        <Box sx={{ bgcolor: '#071028', p: 2, borderRadius: 2, border: '1px solid rgba(255,255,255,0.03)' }}>
+                          <Typography sx={{ fontSize: 11, fontWeight: 800, color: 'text.primary', mb: 1 }}>
+                            🚀 Active Market Basket Correlations Mined:
+                          </Typography>
+                          <Box display="flex" flexDirection="column" gap={1.5} sx={{ mt: 1 }}>
+                            {[
+                              { items: 'Almond Milk → Blueberries', corr: '88% Correlation', type: 'High Conversion' },
+                              { items: 'Beef Ribeye → Red Wine Vinegar', corr: '75% Correlation', type: 'Gourmet Dinner' },
+                              { items: 'Greek Yogurt → Honey Organic', corr: '82% Correlation', type: 'Breakfast Deal' }
+                            ].map((c, i) => (
+                              <Box key={i} display="flex" justifyContent="space-between" alignItems="center" sx={{ bgcolor: 'rgba(255,255,255,0.01)', p: 1, borderRadius: 1.5, border: '1px solid rgba(255,255,255,0.02)' }}>
+                                <Box>
+                                  <Typography sx={{ fontSize: 11, fontWeight: 900, color: '#fff' }}>{c.items}</Typography>
+                                  <Typography sx={{ fontSize: 9, color: 'text.secondary' }}>{c.type}</Typography>
+                                </Box>
+                                <Chip label={c.corr} size="small" sx={{ bgcolor: 'rgba(6, 182, 212, 0.08)', color: '#06B6D4', fontWeight: 800, fontSize: 8, height: 16 }} />
+                              </Box>
+                            ))}
+                          </Box>
+                        </Box>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+
+                </Grid>
+
               </Grid>
-            </Grid>
-          </Grid>
+            )}
+
+            {/* EXECUTIVE VIEW CONTENT (Item 17) */}
+            {viewMode === 'Executive' && (
+              <Grid container spacing={3}>
+                <Grid item xs={12} md={6}>
+                  <Card sx={{ bgcolor: '#111827', border: '1px solid rgba(255,255,255,0.05)', height: '100%' }}>
+                    <CardContent sx={{ p: 3 }}>
+                      <Typography variant="h6" fontWeight="bold" mb={2}>Supermarket Sales Turnover Velocity (Weekly Target)</Typography>
+                      <Box height={280}>
+                        {analytics ? (
+                          <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={analytics.turnoverByCategory}>
+                              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                              <XAxis dataKey="category" stroke="rgba(255,255,255,0.4)" />
+                              <YAxis stroke="rgba(255,255,255,0.4)" />
+                              <RechartsTooltip />
+                              <Bar dataKey="turnover" fill="#06B6D4" radius={[4, 4, 0, 0]} />
+                            </BarChart>
+                          </ResponsiveContainer>
+                        ) : <CircularProgress />}
+                      </Box>
+                    </CardContent>
+                  </Card>
+                </Grid>
+
+                <Grid item xs={12} md={6}>
+                  <Card sx={{ bgcolor: '#111827', border: '1px solid rgba(255,255,255,0.05)', height: '100%' }}>
+                    <CardContent sx={{ p: 3 }}>
+                      <Typography variant="h6" fontWeight="bold" mb={2}>Algorithmic Pricing Yield Multipliers</Typography>
+                      <Box height={280}>
+                        {analytics ? (
+                          <ResponsiveContainer width="100%" height="100%">
+                            <AreaChart data={analytics.salesTrends}>
+                              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                              <XAxis dataKey="time" stroke="rgba(255,255,255,0.4)" />
+                              <YAxis stroke="rgba(255,255,255,0.4)" />
+                              <RechartsTooltip />
+                              <Area type="monotone" dataKey="predicted" stroke="#8B5CF6" fillOpacity={0.15} fill="#8B5CF6" name="Total Yield (₹)" />
+                            </AreaChart>
+                          </ResponsiveContainer>
+                        ) : <CircularProgress />}
+                      </Box>
+                    </CardContent>
+                  </Card>
+                </Grid>
+
+                <Grid item xs={12}>
+                  <Card sx={{ bgcolor: '#111827', border: '1px solid rgba(255,255,255,0.05)' }}>
+                    <CardContent sx={{ p: 3 }}>
+                      <Typography variant="h6" fontWeight="bold" mb={2}>Strategic Food Waste Diversion & Carbon Offset</Typography>
+                      
+                      <Grid container spacing={3}>
+                        {[
+                          { title: 'Total Spoilage Diverted', val: `${analytics?.wasteMetrics?.savedWeight_kg || '240'} kg`, desc: 'Biomass kept out of landfills', color: '#10B981' },
+                          { title: 'Preserved Capital Value', val: `₹${analytics?.wasteMetrics?.totalSaved_INR?.toLocaleString() || '12,450'}`, desc: 'Direct financial salvage ROI', color: '#06B6D4' },
+                          { title: 'Supplier Transit Buffer Saved', val: '4.8 Days', desc: 'Avg delivery lead efficiency', color: '#F59E0B' }
+                        ].map((m, idx) => (
+                          <Grid item xs={12} sm={4} key={idx}>
+                            <Box sx={{ bgcolor: '#071028', p: 3, borderRadius: 3, border: '1px solid rgba(255,255,255,0.03)', textAlign: 'center' }}>
+                              <Typography sx={{ fontSize: 13, fontWeight: 700, color: 'text.secondary' }}>{m.title}</Typography>
+                              <Typography variant="h3" fontWeight="900" sx={{ color: m.color, mt: 1.5, mb: 0.5 }}>{m.val}</Typography>
+                              <Typography sx={{ fontSize: 11, color: 'text.secondary' }}>{m.desc}</Typography>
+                            </Box>
+                          </Grid>
+                        ))}
+                      </Grid>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              </Grid>
+            )}
+
+          </Box>
         )}
 
         {activeView === 'Inventory' && (
