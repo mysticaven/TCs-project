@@ -1,0 +1,44 @@
+# Ignore git history and config
+.git
+.github
+.gitignore
+*.md
+
+# Ignore local python virtual environments and dependencies
+.venv
+venv
+ENV
+env
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.htmlcov/
+.coverage
+
+# Ignore local node packages and build artifacts
+node_modules/
+dist/
+build/
+.npm
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Ignore IDE configurations
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+
+# Ignore local databases and system files
+*.db
+*.sqlite
+.DS_Store
+Thumbs.db
+Dockerfile
+.dockerignore
