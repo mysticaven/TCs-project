@@ -518,6 +518,8 @@ function ProductCard({ item, onAdd, inCart }) {
   );
 }
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+
 // ─── Main Checkout Component ──────────────────────────────────────────────
 export default function UserCheckout() {
   const [products, setProducts] = useState([]);
@@ -537,7 +539,7 @@ export default function UserCheckout() {
 
   // Fetch products
   useEffect(() => {
-    fetch('/api/products?limit=200')
+    fetch(`${API_BASE_URL}/api/products?limit=200`)
       .then(r => r.json())
       .then(data => {
         const valid = (Array.isArray(data.products) ? data.products : [])
@@ -583,7 +585,7 @@ export default function UserCheckout() {
 
   const finishCheckout = async (finalCart, couponShownName, accepted) => {
     try {
-      await fetch('/api/checkout', {
+      await fetch(`${API_BASE_URL}/api/checkout`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -604,7 +606,7 @@ export default function UserCheckout() {
 
     try {
       // Get ML coupon before marking order done
-      const res = await fetch('/api/coupon', {
+      const res = await fetch(`${API_BASE_URL}/api/coupon`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ cart: cart.map(i => i.name) })

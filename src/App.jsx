@@ -23,6 +23,8 @@ import UserCheckout from './UserCheckout';
 
 const drawerWidth = 260;
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+
 const CATEGORY_IMAGES = {
   'Fruits': 'https://images.unsplash.com/photo-1619546813926-a78fa6372cd2?auto=format&fit=crop&q=80&w=300',
   'Vegetables': 'https://images.unsplash.com/photo-1597362925123-77861d3fbac7?auto=format&fit=crop&q=80&w=300',
@@ -73,10 +75,10 @@ export default function App() {
   
   const fetchGlobalMetrics = async () => {
     try {
-      const kpiRes = await fetch('http://localhost:8000/api/kpi').then(res => res.json());
+      const kpiRes = await fetch(`${API_BASE_URL}/api/kpi`).then(res => res.json());
       if (kpiRes) setKpi(kpiRes);
       
-      const recRes = await fetch('http://localhost:8000/api/ai-decisions').then(res => res.json());
+      const recRes = await fetch(`${API_BASE_URL}/api/ai-decisions`).then(res => res.json());
       if (recRes) setRecommendations(recRes);
     } catch (err) {
       console.error("Failed to fetch global metrics", err);
@@ -86,7 +88,7 @@ export default function App() {
   const fetchInventory = async () => {
     setInvLoading(true);
     try {
-      const res = await fetch(`http://localhost:8000/api/products?page=${invPage}&limit=12&search=${invSearch}&category=${invCategory}&sort_by=${invSortBy}&sort_order=${invSortOrder}`).then(r => r.json());
+      const res = await fetch(`${API_BASE_URL}/api/products?page=${invPage}&limit=12&search=${invSearch}&category=${invCategory}&sort_by=${invSortBy}&sort_order=${invSortOrder}`).then(r => r.json());
       if (res) {
         setInventoryList(res.products || []);
         setInvTotal(res.total || 0);
@@ -100,7 +102,7 @@ export default function App() {
 
   const fetchAnalytics = async () => {
     try {
-      const res = await fetch('http://localhost:8000/api/analytics').then(r => r.json());
+      const res = await fetch(`${API_BASE_URL}/api/analytics`).then(r => r.json());
       if (res) setAnalytics(res);
     } catch (err) {
       console.error("Failed to fetch analytics", err);
@@ -109,7 +111,7 @@ export default function App() {
 
   const fetchSensors = async () => {
     try {
-      const res = await fetch('http://localhost:8000/api/sensor-data').then(r => r.json());
+      const res = await fetch(`${API_BASE_URL}/api/sensor-data`).then(r => r.json());
       if (res) {
         setSensorData(res);
         setSensorHistory(prev => {
@@ -125,7 +127,7 @@ export default function App() {
 
   const fetchMLPredictions = async () => {
     try {
-      const res = await fetch('http://localhost:8000/api/ml-predictions').then(r => r.json());
+      const res = await fetch(`${API_BASE_URL}/api/ml-predictions`).then(r => r.json());
       if (res) setMlPredictions(res);
     } catch (err) {
       console.error("Failed to fetch ML", err);
@@ -134,7 +136,7 @@ export default function App() {
 
   const fetchAuditLogs = async () => {
     try {
-      const res = await fetch('http://localhost:8000/api/xai/audit-log').then(r => r.json());
+      const res = await fetch(`${API_BASE_URL}/api/xai/audit-log`).then(r => r.json());
       if (res) setAuditLogs(res.audit_log || []);
     } catch (err) {
       console.error("Failed to fetch audit logs", err);
@@ -168,7 +170,7 @@ export default function App() {
   const handleAddProduct = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch('http://localhost:8000/api/products', {
+      const res = await fetch(`${API_BASE_URL}/api/products`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -194,7 +196,7 @@ export default function App() {
 
   const handleUpdateProduct = async (id, field, value) => {
     try {
-      const res = await fetch(`http://localhost:8000/api/products/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/products/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ [field]: value })
@@ -213,7 +215,7 @@ export default function App() {
   const handleDeleteProduct = async (id) => {
     if (!confirm("Are you sure you want to delete this product?")) return;
     try {
-      const res = await fetch(`http://localhost:8000/api/products/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/products/${id}`, {
         method: 'DELETE'
       }).then(r => r.json());
 
@@ -231,7 +233,7 @@ export default function App() {
     setTraceModal({ open: true, data: null, loading: true });
     try {
       const days = product.expiry_date ? Math.max(0, Math.ceil((new Date(product.expiry_date) - new Date()) / (1000 * 60 * 60 * 24))) : 15;
-      const res = await fetch('http://localhost:8000/api/xai/traceability', {
+      const res = await fetch(`${API_BASE_URL}/api/xai/traceability`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -264,7 +266,7 @@ export default function App() {
   const handleYogurtDemo = async () => {
     setTraceModal({ open: true, data: null, loading: true });
     try {
-      const res = await fetch('http://localhost:8000/api/xai/demo').then(r => r.json());
+      const res = await fetch(`${API_BASE_URL}/api/xai/demo`).then(r => r.json());
       setTraceModal({ open: true, data: res, loading: false });
     } catch (err) {
       console.error("Demo failed", err);
