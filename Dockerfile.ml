@@ -8,8 +8,8 @@ COPY requirements.txt .
 # Install dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy ML models
-COPY ml_models/ ./ml_models/
+# Copy all application code
+COPY . .
 
 # Expose port
 EXPOSE 8000
