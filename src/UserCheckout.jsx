@@ -158,8 +158,9 @@ function ImageWithFallback({ url, emoji, alt, className }) {
 }
 
 // ─── AI Deal Modal ────────────────────────────────────────────────────────
-function AiDealModal({ coupon, products, onAccept, onDecline }) {
+function AiDealModal({ coupons, products, onAccept, onDecline }) {
   const [secs, setSecs] = useState(15);
+  const [selectedIds, setSelectedIds] = useState(coupons.map((_, i) => i));
 
   useEffect(() => {
     const t = setInterval(() => setSecs(s => {
@@ -169,191 +170,245 @@ function AiDealModal({ coupon, products, onAccept, onDecline }) {
     return () => clearInterval(t);
   }, [onDecline]);
 
-  const prod = products.find(p => p.name === coupon.recommendation);
-  const displayProd = prod || {
-    id: Math.floor(Math.random() * 90000) + 10000,
-    name: coupon.recommendation,
-    category: 'Groceries',
-    price: coupon.original_price,
-    discount: parseFloat(coupon.discount_text) || 20
+  const toggleSelect = (idx) => {
+    setSelectedIds(prev =>
+      prev.includes(idx) ? prev.filter(id => id !== idx) : [...prev, idx]
+    );
   };
-  const imageData = GET_IMAGE(displayProd.name, displayProd.category);
+
+  const handleAction = () => {
+    const selectedDeals = coupons.filter((_, idx) => selectedIds.includes(idx));
+    onAccept(selectedDeals);
+  };
 
   return (
     <div style={{
       position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-      background: 'rgba(17, 24, 39, 0.88)', backdropFilter: 'blur(12px)',
+      background: 'rgba(10, 15, 30, 0.94)', backdropFilter: 'blur(16px)',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
-      zIndex: 10000, animation: 'fadeIn 0.3s ease-out'
+      zIndex: 10000, animation: 'fadeIn 0.3s ease-out',
+      overflowY: 'auto',
+      padding: '20px'
     }}>
       <div style={{
-        width: '90%', maxWidth: 480, background: COLORS.cardBg, borderRadius: 24,
-        overflow: 'hidden', boxShadow: '0 25px 50px rgba(0,0,0,0.35)',
-        animation: 'popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
+        width: '95%', maxWidth: coupons.length > 1 ? 960 : 460, background: '#111827', borderRadius: 28,
+        overflow: 'hidden', boxShadow: '0 30px 60px rgba(0,0,0,0.5)',
+        animation: 'popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+        border: '1px solid rgba(255,255,255,0.08)'
       }}>
         {/* Header with gradient */}
         <div style={{
-          background: `linear-gradient(135deg, ${COLORS.primary} 0%, ${COLORS.accent} 100%)`,
-          padding: '32px 28px',
+          background: 'linear-gradient(135deg, #7c3aed 0%, #a78bfa 100%)',
+          padding: '24px 28px',
           color: '#FFFFFF',
-          textAlign: 'center'
+          textAlign: 'center',
+          position: 'relative'
         }}>
           <div style={{
             display: 'inline-block',
-            background: 'rgba(255, 255, 255, 0.2)',
+            background: 'rgba(255, 255, 255, 0.25)',
             padding: '6px 16px',
             borderRadius: 100,
-            color: '#FEF3C7',
-            fontSize: 11,
+            color: '#FFF',
+            fontSize: 10,
             fontWeight: 900,
-            marginBottom: 12,
-            letterSpacing: '1.2px',
+            marginBottom: 8,
+            letterSpacing: '1.5px',
             backdropFilter: 'blur(10px)'
           }}>
-            ⚡ AI SMART RECOMMENDATION
+            ⚡ MULTI-ITEM SMART REWARD SYSTEM
           </div>
-          <h2 style={{ margin: 0, fontSize: 28, fontWeight: 900, letterSpacing: '-0.8px' }}>
-            Smart Deal Found!
+          <h2 style={{ margin: 0, fontSize: 26, fontWeight: 900, letterSpacing: '-0.5px' }}>
+            Exclusive Deals Matched for You!
           </h2>
-          <p style={{ margin: '8px 0 0', opacity: 0.9, fontSize: 14, fontWeight: 500 }}>
-            Dynamically matched to your basket
+          <p style={{ margin: '6px 0 0', opacity: 0.9, fontSize: 13, fontWeight: 500 }}>
+            Our Real-Time ML Engine analyzed your basket and recommends these custom markdowns:
           </p>
         </div>
 
-        <div style={{ padding: 32 }}>
-          <div style={{
-            background: '#F9FAFB',
-            borderRadius: 18,
-            padding: 20,
-            marginBottom: 24,
-            border: `1px solid ${COLORS.border}`,
-            display: 'flex',
-            gap: 18,
-            alignItems: 'center'
-          }}>
-            {/* Product Image */}
-            <div style={{
-              width: 100,
-              height: 100,
-              background: COLORS.cardBg,
-              borderRadius: 14,
-              flexShrink: 0,
-              border: `2px solid ${COLORS.primary}`,
-              boxShadow: '0 4px 12px rgba(37, 99, 235, 0.1)'
-            }}>
-              <ImageWithFallback
-                url={imageData.url}
-                emoji={imageData.emoji}
-                alt={displayProd.name}
-              />
-            </div>
+        {/* Product Cards Container */}
+        <div style={{ 
+          padding: 24, 
+          display: 'flex', 
+          flexDirection: coupons.length > 1 ? 'row' : 'column',
+          flexWrap: 'wrap',
+          gap: 20, 
+          justifyContent: 'center',
+          background: '#0a0f1d' 
+        }}>
+          {coupons.map((c, idx) => {
+            const prod = products.find(p => p.name === c.recommendation);
+            const displayProd = prod || {
+              id: Math.floor(Math.random() * 90000) + 10000,
+              name: c.recommendation,
+              category: 'Groceries',
+              price: c.original_price,
+              discount: parseFloat(c.discount_text) || 20
+            };
+            const imageData = GET_IMAGE(displayProd.name, displayProd.category);
+            const isSelected = selectedIds.includes(idx);
 
-            {/* Product Details */}
-            <div style={{ flex: 1 }}>
-              <div style={{
-                fontSize: 11,
-                color: COLORS.textSecondary,
-                fontWeight: 900,
-                textTransform: 'uppercase',
-                letterSpacing: '1px',
-                marginBottom: 6
-              }}>
-                {displayProd.category}
-              </div>
-              <div style={{
-                fontSize: 18,
-                fontWeight: 900,
-                color: COLORS.text,
-                marginBottom: 10,
-                lineHeight: 1.3
-              }}>
-                {displayProd.name}
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <span style={{
-                  textDecoration: 'line-through',
-                  color: COLORS.textSecondary,
-                  fontSize: 15
-                }}>
-                  ₹{(displayProd.price * 1.15).toFixed(0)}
-                </span>
-                <span style={{
-                  color: COLORS.danger,
+            return (
+              <div 
+                key={idx}
+                onClick={() => toggleSelect(idx)}
+                style={{
+                  flex: coupons.length > 1 ? '1 1 280px' : '1 1 auto',
+                  maxWidth: coupons.length > 1 ? 340 : '100%',
+                  background: isSelected ? 'rgba(124, 58, 237, 0.08)' : 'rgba(255, 255, 255, 0.02)',
+                  borderRadius: 20,
+                  border: `2px solid ${isSelected ? '#7c3aed' : 'rgba(255, 255, 255, 0.05)'}`,
+                  padding: 16,
+                  cursor: 'pointer',
+                  position: 'relative',
+                  transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                  transform: isSelected ? 'scale(1.02)' : 'none',
+                  boxShadow: isSelected ? '0 10px 30px rgba(124, 58, 237, 0.2)' : 'none'
+                }}
+              >
+                {/* Selection indicator */}
+                <div style={{
+                  position: 'absolute',
+                  top: 12,
+                  right: 12,
+                  width: 24,
+                  height: 24,
+                  borderRadius: '50%',
+                  border: `2px solid ${isSelected ? '#7c3aed' : 'rgba(255, 255, 255, 0.3)'}`,
+                  background: isSelected ? '#7c3aed' : 'transparent',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#fff',
                   fontWeight: 900,
-                  fontSize: 24,
-                  letterSpacing: '-0.5px'
+                  fontSize: 12,
+                  zIndex: 20
                 }}>
-                  ₹{coupon.discount_price}
-                </span>
+                  {isSelected ? '✓' : ''}
+                </div>
+
+                {/* Expiry Badge */}
+                {c.expiry_push && (
+                  <div style={{
+                    position: 'absolute',
+                    top: 12,
+                    left: 12,
+                    background: '#EF4444',
+                    color: '#fff',
+                    padding: '3px 8px',
+                    borderRadius: 6,
+                    fontSize: 8,
+                    fontWeight: 900,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.8px',
+                    zIndex: 10
+                  }}>
+                    Expiry Rescue
+                  </div>
+                )}
+
+                <div style={{ display: 'flex', gap: 14, alignItems: 'center', marginBottom: 12 }}>
+                  <div style={{
+                    width: 72,
+                    height: 72,
+                    background: '#1e293b',
+                    borderRadius: 12,
+                    overflow: 'hidden',
+                    flexShrink: 0,
+                    border: `1.5px solid ${isSelected ? '#7c3aed' : 'rgba(255,255,255,0.05)'}`,
+                    position: 'relative'
+                  }}>
+                    <ImageWithFallback
+                      url={imageData.url}
+                      emoji={imageData.emoji}
+                      alt={displayProd.name}
+                    />
+                  </div>
+                  <div>
+                    <span style={{ fontSize: 9, color: '#a78bfa', fontWeight: 900, textTransform: 'uppercase' }}>
+                      {displayProd.category}
+                    </span>
+                    <h4 style={{ margin: '2px 0 6px', fontSize: 14, fontWeight: 900, color: '#fff', lineHeight: 1.2 }}>
+                      {displayProd.name}
+                    </h4>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span style={{ textDecoration: 'line-through', color: 'rgba(255,255,255,0.4)', fontSize: 12 }}>
+                        ₹{displayProd.price.toFixed(0)}
+                      </span>
+                      <span style={{ color: '#10B981', fontWeight: 950, fontSize: 16 }}>
+                        ₹{c.discount_price}
+                      </span>
+                      <span style={{ background: 'rgba(16, 185, 129, 0.15)', color: '#10B981', padding: '2px 6px', borderRadius: 6, fontSize: 9, fontWeight: 900 }}>
+                        {c.discount_text}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{
+                  background: 'rgba(255,255,255,0.02)',
+                  borderRadius: 12,
+                  padding: 10,
+                  fontSize: 11,
+                  color: 'rgba(255,255,255,0.8)',
+                  lineHeight: 1.4,
+                  border: '1px solid rgba(255,255,255,0.03)'
+                }}>
+                  💡 {c.message}
+                </div>
               </div>
+            );
+          })}
+        </div>
+
+        {/* Footer Actions */}
+        <div style={{ padding: 24, background: '#070b16', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+          <div style={{ display: 'flex', gap: 14, alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap' }}>
+            <div style={{
+              fontSize: 13,
+              color: 'rgba(255,255,255,0.6)',
+              fontWeight: 600
+            }}>
+              Offers expire in <span style={{ color: '#EF4444', fontWeight: 900 }}>{secs}s</span>
             </div>
-          </div>
-
-          {/* Message */}
-          <div style={{
-            background: '#ECFDF5',
-            color: '#065F46',
-            padding: '18px 16px',
-            borderRadius: 16,
-            fontSize: 14,
-            fontWeight: 600,
-            lineHeight: 1.5,
-            marginBottom: 28,
-            border: `1px solid ${COLORS.success}20`,
-            borderLeft: `4px solid ${COLORS.success}`
-          }}>
-            💡 {coupon.message}
-          </div>
-
-          {/* Buttons */}
-          <div style={{ display: 'flex', gap: 14, marginBottom: 20 }}>
-            <button
-              onClick={onDecline}
-              style={{
-                flex: 1,
-                padding: '14px 0',
-                background: '#F3F4F6',
-                border: 'none',
-                borderRadius: 12,
-                cursor: 'pointer',
-                fontWeight: 800,
-                color: COLORS.textSecondary,
-                fontSize: 14,
-                transition: 'all 0.2s ease',
-                ':hover': { background: '#E5E7EB' }
-              }}
-              onMouseEnter={(e) => e.target.style.background = '#E5E7EB'}
-              onMouseLeave={(e) => e.target.style.background = '#F3F4F6'}
-            >
-              Not Now
-            </button>
-            <button
-              onClick={() => onAccept(displayProd, coupon.discount_price)}
-              style={{
-                flex: 1.4,
-                padding: '14px 0',
-                background: `linear-gradient(135deg, ${COLORS.primary}, ${COLORS.accent})`,
-                border: 'none',
-                borderRadius: 12,
-                cursor: 'pointer',
-                fontWeight: 900,
-                fontSize: 15,
-                color: '#FFFFFF',
-                boxShadow: `0 12px 24px ${COLORS.primary}30`,
-                transition: 'all 0.2s ease'
-              }}
-            >
-              Add & Proceed
-            </button>
-          </div>
-
-          <div style={{
-            textAlign: 'center',
-            fontSize: 12,
-            color: COLORS.textSecondary,
-            fontWeight: 600
-          }}>
-            This offer expires in <span style={{ color: COLORS.danger, fontWeight: 900 }}>{secs}s</span>
+            
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button
+                onClick={onDecline}
+                style={{
+                  padding: '12px 24px',
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  border: 'none',
+                  borderRadius: 12,
+                  cursor: 'pointer',
+                  fontWeight: 800,
+                  color: 'rgba(255, 255, 255, 0.7)',
+                  fontSize: 13,
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.1)'}
+                onMouseLeave={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.05)'}
+              >
+                No, Thank You
+              </button>
+              <button
+                onClick={handleAction}
+                style={{
+                  padding: '12px 28px',
+                  background: 'linear-gradient(135deg, #7c3aed, #a78bfa)',
+                  border: 'none',
+                  borderRadius: 12,
+                  cursor: 'pointer',
+                  fontWeight: 900,
+                  fontSize: 13,
+                  color: '#FFFFFF',
+                  boxShadow: '0 8px 20px rgba(124, 58, 237, 0.3)',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                {selectedIds.length > 0 ? `Add Selected (${selectedIds.length}) & Checkout` : 'Checkout without Deals'}
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -525,7 +580,7 @@ export default function UserCheckout() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [cart, setCart] = useState([]);
-  const [coupon, setCoupon] = useState(null);
+  const [coupons, setCoupons] = useState(null);
 
   // Filters
   const [search, setSearch] = useState('');
@@ -614,8 +669,8 @@ export default function UserCheckout() {
       const data = await res.json();
       setCheckingDeals(false);
 
-      if (data.coupon) {
-        setCoupon(data.coupon); // show the AI modal
+      if (data.coupons && data.coupons.length > 0) {
+        setCoupons(data.coupons); // show the AI modal
       } else {
         // No coupon available, complete checkout immediately
         finishCheckout(cart, null, false);
@@ -1205,25 +1260,36 @@ export default function UserCheckout() {
       </div>
 
       {/* AI Deal Modal */}
-      {coupon && (
+      {coupons && (
         <AiDealModal
-          coupon={coupon}
+          coupons={coupons}
           products={products}
-          onAccept={(prod, price) => {
+          onAccept={(selectedDeals) => {
             const updatedCart = [...cart];
-            const exists = updatedCart.find(i => i.id === prod.id);
-            if (exists) {
-              updatedCart.push({ ...prod, id: prod.id + 100000, qty: 1, price: price });
-            } else {
-              updatedCart.push({ ...prod, qty: 1, price: price });
-            }
+            selectedDeals.forEach(deal => {
+              const prod = products.find(p => p.name === deal.recommendation);
+              const displayProd = prod || {
+                id: Math.floor(Math.random() * 90000) + 10000,
+                name: deal.recommendation,
+                category: 'Groceries',
+                price: deal.original_price,
+                discount: parseFloat(deal.discount_text) || 20
+              };
+              const exists = updatedCart.find(i => i.id === displayProd.id);
+              if (exists) {
+                updatedCart.push({ ...displayProd, id: displayProd.id + 100000, qty: 1, price: deal.discount_price });
+              } else {
+                updatedCart.push({ ...displayProd, qty: 1, price: deal.discount_price });
+              }
+            });
             setCart(updatedCart);
-            setCoupon(null);
-            finishCheckout(updatedCart, coupon.recommendation, true);
+            setCoupons(null);
+            const names = selectedDeals.map(d => d.recommendation).join(', ');
+            finishCheckout(updatedCart, names || 'none', selectedDeals.length > 0);
           }}
           onDecline={() => {
-            setCoupon(null);
-            finishCheckout(cart, coupon.recommendation, false);
+            setCoupons(null);
+            finishCheckout(cart, null, false);
           }}
         />
       )}

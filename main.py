@@ -90,6 +90,17 @@ class MLPrediction(Base):
     model = Column(String(100))
     created_at = Column(DateTime, default=datetime.utcnow)
 
+class VendorAlert(Base):
+    __tablename__ = "vendor_alerts"
+    id = Column(Integer, primary_key=True, index=True)
+    product_name = Column(String(255))
+    supplier = Column(String(255))
+    quantity_remaining = Column(Integer)
+    reorder_threshold = Column(Integer)
+    units_ordered = Column(Integer)
+    status = Column(String(50), default="Pending Supplier Dispatch") # Pending, Dispatched, Delivered
+    created_at = Column(DateTime, default=datetime.utcnow)
+
 # ─── Emojis ───────────────────────────────────────────────────────────────
 CATEGORY_EMOJI = {
     'Fruits': '🍎', 'Vegetables': '🥬', 'Dairy': '🥛', 'Meat': '🍗',
@@ -123,7 +134,10 @@ def get_emoji(name: str, category: str) -> str:
 ML_RULES = []
 
 def load_ml_rules():
-    rules_path = os.path.join(os.path.dirname(__file__), "ml_models", "retail_rules.csv")
+    rules_path = os.path.join(os.path.dirname(__file__), "ml_models", "trained_rules.csv")
+    if not os.path.exists(rules_path):
+        rules_path = os.path.join(os.path.dirname(__file__), "ml_models", "retail_rules.csv")
+    
     if not os.path.exists(rules_path):
         # Create a mock rule list if not present
         ML_RULES.append({
@@ -204,6 +218,26 @@ def get_seeded_image_url(name: str, category: str) -> str:
     if 'potato' in n or 'potatoes' in n or 'spinach' in n or 'onion' in n or 'onions' in n or 'carrot' in n or 'carrots' in n or 'broccoli' in n or 'garlic' in n or 'cucumber' in n or 'cucumbers' in n or 'pepper' in n or 'lettuce' in n or 'cauliflower' in n or 'zucchini' in n or 'mushroom' in n or 'mushrooms' in n or 'celery' in n or 'asparagus' in n or 'vegetables' in n or 'veg' in n:
         return 'https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&q=80&w=400'
     
+    # Modern tech and hardware matches
+    if 'laptop' in n:
+        return 'https://images.unsplash.com/photo-1496181130204-755241524eab?auto=format&fit=crop&q=80&w=400'
+    if 'mouse' in n or 'keyboard' in n:
+        return 'https://images.unsplash.com/photo-1615663245857-ac93bb7c39e7?auto=format&fit=crop&q=80&w=400'
+    if 'camera' in n or 'dslr' in n:
+        return 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&q=80&w=400'
+    if 'sd card' in n or 'flash' in n or 'ssd' in n:
+        return 'https://images.unsplash.com/photo-1590608897129-79da98d15969?auto=format&fit=crop&q=80&w=400'
+    if 'watch' in n or 'smartwatch' in n:
+        return 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=400'
+    if 'tv' in n or 'soundbar' in n or 'speaker' in n:
+        return 'https://images.unsplash.com/photo-1593305841991-05c297ba4575?auto=format&fit=crop&q=80&w=400'
+    if 'diaper' in n or 'wipes' in n or 'baby' in n:
+        return 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&q=80&w=400'
+    if 'notebook' in n or 'pen' in n or 'paper' in n:
+        return 'https://images.unsplash.com/photo-1531346878377-a5be20888e57?auto=format&fit=crop&q=80&w=400'
+    if 'backpack' in n or 'bag' in n:
+        return 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&q=80&w=400'
+
     # Category defaults
     defaults = {
         'Fruits': 'https://images.unsplash.com/photo-1619546813926-a78fa6372cd2?auto=format&fit=crop&q=80&w=400',
@@ -211,17 +245,75 @@ def get_seeded_image_url(name: str, category: str) -> str:
         'Dairy': 'https://images.unsplash.com/photo-1550583724-b2692b85b150?auto=format&fit=crop&q=80&w=400',
         'Meat': 'https://images.unsplash.com/photo-1607623814075-e51df1bdc82f?auto=format&fit=crop&q=80&w=400',
         'Frozen Food': 'https://images.unsplash.com/photo-1563245372-f21724e3856d?auto=format&fit=crop&q=80&w=400',
-        'Drinks': 'https://images.unsplash.com/photo-1527960656366-ee2a999e32e6?auto=format&fit=crop&q=80&w=400'
+        'Drinks': 'https://images.unsplash.com/photo-1527960656366-ee2a999e32e6?auto=format&fit=crop&q=80&w=400',
+        'Electronics': 'https://images.unsplash.com/photo-1498049794561-7780e7231661?auto=format&fit=crop&q=80&w=400',
+        'Personal Care': 'https://images.unsplash.com/photo-1526947425960-945c6e72858f?auto=format&fit=crop&q=80&w=400',
+        'Office Supplies': 'https://images.unsplash.com/photo-1586075010923-2dd4570fb338?auto=format&fit=crop&q=80&w=400',
+        'Groceries': 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=400'
     }
     return defaults.get(category, 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=400')
+
+def calculate_product_health_independent(name: str, category: str, days_left: int, temp: float, humidity: float, gas: float, ph: float) -> tuple[float, float]:
+    """Calculates freshness and independent health score based on product type biology/sensitivity."""
+    freshness = max(10.0, min(100.0, 100.0 - (30 - days_left) * 3.0)) if days_left < 30 else 100.0
+    
+    n = name.lower()
+    if category == 'Dairy' or 'milk' in n or 'cheese' in n or 'yogurt' in n:
+        # Dairy is extremely temperature and pH sensitive
+        temp_factor = max(0, min(100, 100 - max(0.0, temp - 4.0) * 15))
+        humidity_factor = max(0, min(100, 100 - abs(humidity - 70.0) * 1.5))
+        gas_factor = max(0, min(100, 100 - (gas / 600.0) * 100))
+        ph_factor = max(0, min(100, 100 - abs(ph - 6.6) * 50)) # sour when ph drops below 6.0
+        health = 0.20 * freshness + 0.30 * temp_factor + 0.10 * humidity_factor + 0.10 * gas_factor + 0.30 * ph_factor
+        
+    elif category == 'Meat' or 'beef' in n or 'chicken' in n or 'salmon' in n:
+        # Meat is sensitive to temp and decay gases (ammonia/sulfides)
+        temp_factor = max(0, min(100, 100 - max(0.0, temp - 2.0) * 20))
+        humidity_factor = max(0, min(100, 100 - abs(humidity - 80.0) * 1))
+        gas_factor = max(0, min(100, 100 - (gas / 400.0) * 100)) # highly gas volatile
+        ph_factor = max(0, min(100, 100 - abs(ph - 5.8) * 15))
+        health = 0.20 * freshness + 0.35 * temp_factor + 0.10 * humidity_factor + 0.30 * gas_factor + 0.05 * ph_factor
+        
+    elif category in ['Fruits', 'Vegetables']:
+        # Ripens with moderate temp, loves high humidity, sensitive to ethylene (gas)
+        ideal_temp = 10.0 if ('banana' in n or 'mango' in n) else 5.0
+        temp_factor = max(0, min(100, 100 - abs(temp - ideal_temp) * 8))
+        humidity_factor = max(0, min(100, 100 - abs(humidity - 85.0) * 1.5))
+        gas_factor = max(0, min(100, 100 - (gas / 500.0) * 100))
+        ph_factor = max(0, min(100, 100 - abs(ph - 6.0) * 10))
+        health = 0.35 * freshness + 0.20 * temp_factor + 0.20 * humidity_factor + 0.20 * gas_factor + 0.05 * ph_factor
+        
+    elif category == 'Electronics':
+        # Non-perishable, completely ignores gas & pH. Sensitive to heat and condensation (humidity)
+        freshness = 100.0
+        temp_factor = max(0, min(100, 100 - max(0.0, temp - 30.0) * 3))
+        humidity_factor = max(0, min(100, 100 - max(0.0, humidity - 80.0) * 4))
+        health = 0.50 * temp_factor + 0.50 * humidity_factor
+        
+    else:
+        # Dry groceries, clothing, tools etc.
+        temp_factor = max(0, min(100, 100 - max(0.0, temp - 25.0) * 2))
+        humidity_factor = max(0, min(100, 100 - max(0.0, humidity - 70.0) * 2))
+        gas_factor = max(0, min(100, 100 - (gas / 700.0) * 50))
+        health = 0.40 * freshness + 0.25 * temp_factor + 0.25 * humidity_factor + 0.10 * gas_factor
+        
+    return round(freshness, 1), round(max(0.0, min(100.0, health)), 1)
+
 
 # ─── Auto-Populate 5000 Products ─────────────────────────────────────────────
 def seed_products_5000():
     with SessionLocal() as db:
         prod_count = db.query(Product).count()
-        if prod_count >= 100:
-            print(f"[OK] {prod_count} products already in DB, skipping 5k auto-populate.")
+        electronics_count = db.query(Product).filter(Product.category == 'Electronics').count()
+        
+        # Automatically wipe and re-populate the database if electronics/tech items are missing
+        if prod_count >= 100 and electronics_count > 0:
+            print(f"[OK] {prod_count} products already in DB (including tech/personal care), skipping 5k auto-populate.")
             return
+
+        print("[DB] Initializing/Re-seeding database to include modern product categories...")
+        db.query(Product).delete()
+        db.commit()
 
         print("Generating 5000 premium dummy products automatically...")
         
@@ -237,13 +329,19 @@ def seed_products_5000():
             'Dairy': ['Whole Milk', 'Low-Fat Milk', 'Cheddar Cheese', 'Mozzarella', 'Butter', 'Greek Yogurt', 'Sour Cream', 'Heavy Cream', 'Cream Cheese', 'Cottage Cheese', 'Almond Milk', 'Swiss Cheese'],
             'Meat': ['Chicken Breast', 'Ribeye Steak', 'Ground Beef', 'Pork Chops', 'Turkey Breast', 'Salmon Fillet', 'Bacon', 'Italian Sausage', 'Lamb Chops', 'Ham Fillet', 'Shrimp Pack', 'Tuna Steak'],
             'Frozen Food': ['Frozen Pizza', 'Ice Cream Tub', 'Chicken Nuggets', 'Frozen Waffles', 'Frozen Peas', 'Frozen Berries', 'French Fries', 'Frozen Burrito', 'Veggie Burgers', 'Fish Sticks', 'Pot Stickers'],
-            'Drinks': ['Cola Can', 'Diet Soda', 'Lemonade Bottle', 'Orange Juice Carton', 'Apple Juice Bottle', 'Green Tea', 'Black Coffee Beans', 'Energy Drink', 'Iced Tea', 'Coconut Water', 'Sparkling Water', 'Ginger Ale']
+            'Drinks': ['Cola Can', 'Diet Soda', 'Lemonade Bottle', 'Orange Juice Carton', 'Apple Juice Bottle', 'Green Tea', 'Black Coffee Beans', 'Energy Drink', 'Iced Tea', 'Coconut Water', 'Sparkling Water', 'Ginger Ale'],
+            'Electronics': ['Laptop', 'Wireless Mouse', 'DSLR Camera', 'SD Card', 'Smart TV', 'Soundbar', 'Tablet', 'Smartwatch', 'Bluetooth Speaker', 'VR Headset'],
+            'Personal Care': ['Diapers', 'Wet Wipes', 'Baby Lotion', 'Baby Wash', 'Shampoo', 'Soap', 'Toothpaste', 'Lotion'],
+            'Office Supplies': ['Notebooks (Set of 5)', 'Blue Pens', 'Pens', 'Notebook', 'Stapler', 'Calculator'],
+            'Groceries': ['Pasta', 'Garlic Bread', 'Burger', 'Large Fries', 'Coffee', 'Almond Croissant', 'Backpack', 'Lunch Box', 'Olive Oil', 'Rice']
         }
         
-        suppliers = ['Apex Distributors', 'Global Foods Inc.', 'Nature\'s Harvest', 'Prime Meats Ltd.', 'CoolTemp Logistics', 'Oceanic Seafoods']
+        suppliers = ['Apex Distributors', 'Global Foods Inc.', 'Nature\'s Harvest', 'Prime Meats Ltd.', 'CoolTemp Logistics', 'Oceanic Seafoods', 'Silicon Logistics', 'CarePack Corp']
         price_ranges = {
             'Fruits': (1.99, 9.99), 'Vegetables': (0.99, 6.99), 'Dairy': (1.49, 12.99),
-            'Meat': (5.99, 39.99), 'Frozen Food': (2.99, 15.99), 'Drinks': (0.99, 8.99)
+            'Meat': (5.99, 39.99), 'Frozen Food': (2.99, 15.99), 'Drinks': (0.99, 8.99),
+            'Electronics': (19.99, 999.99), 'Personal Care': (2.49, 19.99),
+            'Office Supplies': (1.49, 14.99), 'Groceries': (1.99, 29.99)
         }
 
         name_tracker = set()
@@ -397,31 +495,29 @@ def simulate_sensor_tick():
             today_val = date.today()
 
             for p in selected_for_review:
-                is_perishable = p.category in ['Fruits', 'Vegetables', 'Dairy', 'Meat']
                 days_left = (p.expiry_date - today_val).days if p.expiry_date else 999
                 
-                if is_perishable:
-                    # Drift freshness and calculate health dynamically
-                    freshness = max(10, min(100, 100 - (30 - days_left) * 3)) if days_left < 30 else 100.0
-                    temp_factor = max(0, min(100, 100 - abs(LATEST_SENSOR["temperature"] - 4.0) * 10))
-                    humidity_factor = max(0, min(100, 100 - abs(LATEST_SENSOR["humidity"] - 65.0) * 2))
-                    gas_factor = max(0, min(100, 100 - (LATEST_SENSOR["gas_ppm"] / 800.0) * 100))
-                    ph_factor = max(0, min(100, 100 - abs(LATEST_SENSOR["ph"] - 6.5) * 25))
-                    
-                    health = round(0.35 * freshness + 0.25 * temp_factor + 0.20 * humidity_factor + 0.10 * gas_factor + 0.10 * ph_factor, 1)
-                    p.health_score = health
-                    p.freshness_score = freshness
-                    
-                    # Log to prediction monitoring
-                    db.add(MLPrediction(
-                        product_name=p.name,
-                        prediction="Fresh" if health > 75 else "Moderate" if health > 45 else "Risky",
-                        confidence=round(health, 1),
-                        model="Random Forest TinyML"
-                    ))
+                # Calculate independent product health under common shelf conditions
+                freshness, health = calculate_product_health_independent(
+                    p.name, p.category, days_left, 
+                    LATEST_SENSOR["temperature"], LATEST_SENSOR["humidity"], 
+                    LATEST_SENSOR["gas_ppm"], LATEST_SENSOR["ph"]
+                )
+                
+                p.health_score = health
+                p.freshness_score = freshness
+                
+                # Log to prediction monitoring
+                db.add(MLPrediction(
+                    product_name=p.name,
+                    prediction="Fresh" if health > 75 else "Moderate" if health > 45 else "Risky",
+                    confidence=round(health, 1),
+                    model="Random Forest TinyML"
+                ))
 
-                    # Auto-discount logic
-                    spoilage_risk = 100 - health
+                # Auto-discount logic for perishables or high spoilage risk items
+                spoilage_risk = 100.0 - health
+                if p.category in ['Fruits', 'Vegetables', 'Dairy', 'Meat', 'Groceries']:
                     if days_left <= 5 or spoilage_risk > 50:
                         expiry_urgency = min(100, max(0, 100 - days_left * 15)) if days_left > 0 else 100
                         overstock_score = min(100, max(0, (p.quantity / 200) * 100))
@@ -453,11 +549,12 @@ def simulate_sensor_tick():
                 reorder_point = int((daily_sales * lead_time) + safety_stock)
                 
                 if p.quantity < reorder_point:
-                    # Stock falls under safety threshold -> Place PO & replenish stock automatically
+                    # Stock falls under safety threshold -> Place PO & dispatch alert to vendor
                     units_to_order = int(daily_sales * 7) # order 1 week of stock
                     old_qty = p.quantity
                     p.quantity += units_to_order
                     
+                    # Log AI decision
                     db.add(AIDecision(
                         product_name=p.name,
                         trigger=f"Stock ({old_qty}) fell below Safety Reorder point ({reorder_point})",
@@ -466,6 +563,16 @@ def simulate_sensor_tick():
                         status="replenished",
                         model="EOQ Safety Reorder Point",
                         confidence=100.0
+                    ))
+
+                    # Log Vendor Alert restock ticket
+                    db.add(VendorAlert(
+                        product_name=p.name,
+                        supplier=p.supplier,
+                        quantity_remaining=old_qty,
+                        reorder_threshold=reorder_point,
+                        units_ordered=units_to_order,
+                        status="Pending Supplier Dispatch"
                     ))
         db.commit()
 
@@ -756,50 +863,12 @@ def delete_product(product_id: int):
         return {"success": True}
 
 # ─── Coupon / Deals ───────────────────────────────────────────────────────────
-def find_coupon(cart_names: list[str], expiry_override: str = None) -> Optional[dict]:
+def find_coupons(cart_names: list[str]) -> list[dict]:
+    coupons = []
+    added_names = set()
+    
     with SessionLocal() as db:
-        if expiry_override:
-            prod = db.query(Product).filter(Product.name.ilike(expiry_override)).first()
-            if prod:
-                days = (prod.expiry_date - date.today()).days if prod.expiry_date else 999
-                discount_pct = min(70, max(20, 70 - days * 10))
-                return {
-                    "recommendation": prod.name,
-                    "trigger_items": ["expiry-push"],
-                    "discount_text": f"{discount_pct}% OFF",
-                    "discount_price": round(prod.price * (1 - discount_pct / 100), 2),
-                    "original_price": prod.price,
-                    "confidence": 99,
-                    "lift": 9.9,
-                    "message": f"Auto-Applied deal: {prod.name} expires in {days} day(s). Save {discount_pct}% automatically!",
-                    "expiry_push": True
-                }
-
-        if not cart_names: return None
-        cart_set = set(n.strip().lower() for n in cart_names)
-        for rule in ML_RULES:
-            if all(a.lower() in cart_set for a in rule["antecedents"]):
-                rec = rule["consequents"][0]
-                if rec in cart_set: continue
-                prod = db.query(Product).filter(Product.name.ilike(rec)).first()
-                price = prod.price if prod else 49.99
-                discount_pct = min(50, round(rule["lift"] * 8))
-                return {
-                    "recommendation": rec,
-                    "trigger_items": rule["antecedents"],
-                    "discount_text": f"{discount_pct}% OFF",
-                    "discount_price": round(price * (1 - discount_pct / 100), 2),
-                    "original_price": price,
-                    "confidence": round(rule["confidence"] * 100),
-                    "lift": round(rule["lift"], 2),
-                    "message": f"AI automated cross-sell: 65% of shoppers who buy "
-                               f"'{' + '.join(rule['antecedents'])}' also buy '{rec}'. Get {discount_pct}% off now!"
-                }
-    return None
-
-@app.post("/api/coupon")
-def get_coupon(req: CouponRequest):
-    with SessionLocal() as db:
+        # 1. EXPIRY RESCUE PUSH (Limit to 1 to leave room for basket association cross-sells)
         tomorrow = date.today() + timedelta(days=2)
         expiring = db.query(Product).filter(
             Product.expiry_date != None,
@@ -807,12 +876,111 @@ def get_coupon(req: CouponRequest):
             Product.quantity > 0
         ).order_by(Product.expiry_date).first()
 
-    if expiring:
-        coupon = find_coupon(req.cart, expiry_override=expiring.name)
-    else:
-        coupon = find_coupon(req.cart)
-        
-    return {"coupon": coupon}
+        if expiring:
+            days = (expiring.expiry_date - date.today()).days if expiring.expiry_date else 999
+            discount_pct = min(70, max(20, 70 - days * 10))
+            coupons.append({
+                "recommendation": expiring.name,
+                "trigger_items": ["expiry-push"],
+                "discount_text": f"{discount_pct}% OFF",
+                "discount_price": round(expiring.price * (1 - discount_pct / 100), 2),
+                "original_price": expiring.price,
+                "confidence": 99,
+                "lift": 9.9,
+                "message": f"Freshness Alert: '{expiring.name}' expires in {days} day(s). Save {discount_pct}% & rescue this item!",
+                "expiry_push": True
+            })
+            added_names.add(expiring.name.strip().lower())
+
+        # 2. MARKET BASKET ML CROSS-SELLS
+        if cart_names:
+            cart_set = set(n.strip().lower() for n in cart_names)
+            # Find direct association rules first
+            for rule in ML_RULES:
+                if len(coupons) >= 3:
+                    break
+                if any(a.lower() in cart_set for a in rule["antecedents"]):
+                    rec = rule["consequents"][0]
+                    if rec.strip().lower() in cart_set or rec.strip().lower() in added_names:
+                        continue
+                        
+                    prod = db.query(Product).filter(Product.name.ilike(rec)).first()
+                    price = prod.price if prod else 49.99
+                    discount_pct = min(50, round(rule["lift"] * 8))
+                    coupons.append({
+                        "recommendation": rec,
+                        "trigger_items": rule["antecedents"],
+                        "discount_text": f"{discount_pct}% OFF",
+                        "discount_price": round(price * (1 - discount_pct / 100), 2),
+                        "original_price": price,
+                        "confidence": round(rule["confidence"] * 100),
+                        "lift": round(rule["lift"], 2),
+                        "message": f"AI automated cross-sell: 65% of shoppers who buy '{' + '.join(rule['antecedents'])}' also buy '{rec}'. Get {discount_pct}% off now!",
+                        "expiry_push": False
+                    })
+                    added_names.add(rec.strip().lower())
+                    
+            # 3. CATEGORY COMPLEMENTARY FILLER (Ensure exactly 3 deals are always suggested)
+            if len(coupons) < 3:
+                # Get categories of items in the cart
+                cart_products = db.query(Product).filter(Product.name.in_(cart_names)).all()
+                cart_categories = list(set(p.category for p in cart_products))
+                if not cart_categories:
+                    cart_categories = ["Electronics", "Groceries", "Personal Care"]
+                
+                # Fetch popular items in those categories that aren't already in the cart/coupons
+                category_items = db.query(Product).filter(
+                    Product.category.in_(cart_categories),
+                    Product.quantity > 10
+                ).limit(15).all()
+                
+                for item in category_items:
+                    if len(coupons) >= 3:
+                        break
+                    if item.name.strip().lower() in cart_set or item.name.strip().lower() in added_names:
+                        continue
+                        
+                    discount_pct = random.randint(15, 35)
+                    coupons.append({
+                        "recommendation": item.name,
+                        "trigger_items": [f"Category Complementary"],
+                        "discount_text": f"{discount_pct}% OFF",
+                        "discount_price": round(item.price * (1 - discount_pct / 100), 2),
+                        "original_price": item.price,
+                        "confidence": 88,
+                        "lift": 1.9,
+                        "message": f"Complete Your Basket: Grab our premium '{item.name}' from '{item.category}' at {discount_pct}% off!",
+                        "expiry_push": False
+                    })
+                    added_names.add(item.name.strip().lower())
+                    
+        # 4. POPULAR FALLBACK (If no coupons generated at all)
+        if not coupons:
+            popular_items = db.query(Product).filter(Product.quantity > 50).order_by(Product.price.desc()).limit(3).all()
+            for p in popular_items:
+                if len(coupons) >= 3:
+                    break
+                coupons.append({
+                    "recommendation": p.name,
+                    "trigger_items": ["daily-deal"],
+                    "discount_text": "20% OFF",
+                    "discount_price": round(p.price * 0.8, 2),
+                    "original_price": p.price,
+                    "confidence": 85,
+                    "lift": 1.5,
+                    "message": f"Special Daily Deal: Grab our organic '{p.name}' at a sweet 20% markdown!",
+                    "expiry_push": False
+                })
+                
+    return coupons
+
+@app.post("/api/coupon")
+def get_coupon(req: CouponRequest):
+    coupons = find_coupons(req.cart)
+    return {
+        "coupon": coupons[0] if coupons else None,
+        "coupons": coupons
+    }
 
 # ─── Checkout ───────────────────────────────────────────────────────────────
 @app.post("/api/checkout")
@@ -1010,20 +1178,46 @@ def xai_full_traceability(req: TraceabilityRequest):
 def xai_audit_log(limit: int = 50):
     return {"audit_log": xai.get_audit_log(limit), "total": len(xai._AUDIT_LOG)}
 
+@app.get("/api/vendor/alerts")
+def get_vendor_alerts():
+    with SessionLocal() as db:
+        alerts = db.query(VendorAlert).order_by(desc(VendorAlert.created_at)).limit(30).all()
+        return [{
+            "id": a.id,
+            "product_name": a.product_name,
+            "supplier": a.supplier,
+            "quantity_remaining": a.quantity_remaining,
+            "reorder_threshold": a.reorder_threshold,
+            "units_ordered": a.units_ordered,
+            "status": a.status,
+            "timestamp": a.created_at.isoformat()
+        } for a in alerts]
+
 @app.get("/api/xai/demo")
 def xai_demo():
-    return xai.full_traceability_report(
-        product_name="Organic Yogurt",
-        days_to_expiry=2,
-        stock=340,
-        weekly_sales=25,
-        spoilage_prob=81.0,
-        freshness=42.0,
-        temp=9.2,
-        humidity=78.0,
-        gas_ppm=520.0,
-        ph=4.8,
-    )
+    """Generates a dynamic explainable trace log on an actual product in stock, avoiding static mock hardcoding."""
+    with SessionLocal() as db:
+        # Fetch the item in stock with lowest freshness/health or quantity
+        p = db.query(Product).order_by(Product.health_score).first()
+        if not p:
+            # Safe fallback if DB is seeding
+            p = Product(id=999, name="Fresh Milk Milk Pack", category="Dairy", price=12.99, quantity=250, freshness_score=85, health_score=80)
+        
+        days_left = (p.expiry_date - date.today()).days if p.expiry_date else 15
+        spoilage_risk = round(100.0 - p.health_score, 1)
+        
+        return xai.full_traceability_report(
+            product_name=p.name,
+            days_to_expiry=max(0, days_left),
+            stock=p.quantity,
+            weekly_sales=int(randomIntFromId(p.id, 10, 45)),
+            spoilage_prob=spoilage_risk,
+            freshness=p.freshness_score,
+            temp=LATEST_SENSOR["temperature"],
+            humidity=LATEST_SENSOR["humidity"],
+            gas_ppm=LATEST_SENSOR["gas_ppm"],
+            ph=LATEST_SENSOR["ph"]
+        )
 
 # ─── Serve React Frontend ────────────────────────────────────────────────────
 DIST_DIR = os.path.join(os.path.dirname(__file__), "dist")

@@ -73,6 +73,17 @@ export default function App() {
   const [autoOrderRestock, setAutoOrderRestock] = useState(true);
   const [tempThreshold, setTempThreshold] = useState(10.0);
   
+  const [vendorAlerts, setVendorAlerts] = useState([]);
+  
+  const fetchVendorAlerts = async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/vendor/alerts`).then(r => r.json());
+      if (res) setVendorAlerts(res);
+    } catch (err) {
+      console.error("Failed to fetch vendor alerts", err);
+    }
+  };
+  
   const fetchGlobalMetrics = async () => {
     try {
       const kpiRes = await fetch(`${API_BASE_URL}/api/kpi`).then(res => res.json());
@@ -80,6 +91,8 @@ export default function App() {
       
       const recRes = await fetch(`${API_BASE_URL}/api/ai-decisions`).then(res => res.json());
       if (recRes) setRecommendations(recRes);
+      
+      fetchVendorAlerts();
     } catch (err) {
       console.error("Failed to fetch global metrics", err);
     }
@@ -263,13 +276,13 @@ export default function App() {
     return Math.floor((x - Math.floor(x)) * (max - min + 1)) + min;
   };
 
-  const handleYogurtDemo = async () => {
+  const handleXaiDiagnostic = async () => {
     setTraceModal({ open: true, data: null, loading: true });
     try {
       const res = await fetch(`${API_BASE_URL}/api/xai/demo`).then(r => r.json());
       setTraceModal({ open: true, data: res, loading: false });
     } catch (err) {
-      console.error("Demo failed", err);
+      console.error("XAI Telemetry Scan failed", err);
       setTraceModal({ open: false, data: null, loading: false });
     }
   };
@@ -286,63 +299,87 @@ export default function App() {
   ];
 
   const drawer = (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <Toolbar sx={{ my: 2 }}>
-        <LocalDining sx={{ color: theme.palette.primary.main, mr: 2, fontSize: 32 }} />
-        <Typography variant="h6" noWrap component="div" fontWeight="bold">
-          QWIC Supermarket
-        </Typography>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', bgcolor: '#0b0b12' }}>
+      <Toolbar sx={{ my: 3, px: 3, justifyContent: 'flex-start', gap: 1.5 }}>
+        <Avatar sx={{ bgcolor: 'rgba(139, 92, 246, 0.15)', border: '1.5px solid #8b5cf6', width: 44, height: 44 }}>
+          <LocalDining sx={{ color: '#8b5cf6', fontSize: 24 }} />
+        </Avatar>
+        <Box>
+          <Typography variant="h6" component="div" fontWeight="900" sx={{ letterSpacing: '-0.5px', color: '#fff', fontSize: 16 }}>
+            QWIC Retail
+          </Typography>
+          <Typography variant="caption" sx={{ color: '#10b981', fontWeight: 800, fontSize: 10, letterSpacing: '0.5px' }}>
+            ● AI-POWERED OS
+          </Typography>
+        </Box>
       </Toolbar>
-      <Divider sx={{ opacity: 0.1 }} />
-      <List sx={{ px: 1, flexGrow: 1, overflowY: 'auto' }}>
-        {NAVIGATION_ITEMS.map((item) => (
-          <ListItem key={item.text} disablePadding sx={{ mb: 0.5 }}>
-            <ListItemButton 
-              onClick={() => {
-                setActiveView(item.view);
-                if (isMobile) setMobileOpen(false);
-              }}
-              sx={{ 
-                borderRadius: 2, 
-                backgroundColor: activeView === item.view ? 'rgba(124, 58, 237, 0.15)' : 'transparent',
-                color: activeView === item.view ? theme.palette.primary.light : 'text.secondary',
-                '&:hover': {
-                  backgroundColor: activeView === item.view ? 'rgba(124, 58, 237, 0.25)' : 'rgba(255, 255, 255, 0.05)'
-                }
-              }}
-            >
-              <ListItemIcon sx={{ color: activeView === item.view ? theme.palette.primary.light : 'text.secondary', minWidth: 40 }}>
-                {item.icon}
-              </ListItemIcon>
-              <ListItemText primary={item.text} primaryTypographyProps={{ fontWeight: activeView === item.view ? 600 : 400, fontSize: 14 }} />
-            </ListItemButton>
-          </ListItem>
-        ))}
+      <Divider sx={{ opacity: 0.05, mb: 1 }} />
+      <List sx={{ px: 1.5, flexGrow: 1, overflowY: 'auto' }}>
+        {NAVIGATION_ITEMS.map((item) => {
+          const isSelected = activeView === item.view;
+          return (
+            <ListItem key={item.text} disablePadding sx={{ mb: 0.8 }}>
+              <ListItemButton 
+                onClick={() => {
+                  setActiveView(item.view);
+                  if (isMobile) setMobileOpen(false);
+                }}
+                sx={{ 
+                  borderRadius: '12px', 
+                  backgroundColor: isSelected ? 'rgba(139, 92, 246, 0.1)' : 'transparent',
+                  color: isSelected ? '#c084fc' : '#94a3b8',
+                  border: isSelected ? '1px solid rgba(139, 92, 246, 0.25)' : '1px solid transparent',
+                  transition: 'all 0.25s ease-in-out',
+                  '&:hover': {
+                    backgroundColor: isSelected ? 'rgba(139, 92, 246, 0.15)' : 'rgba(255, 255, 255, 0.03)',
+                    color: '#fff'
+                  }
+                }}
+              >
+                <ListItemIcon sx={{ 
+                  color: isSelected ? '#a78bfa' : '#64748b', 
+                  minWidth: 38,
+                  transition: 'color 0.25s'
+                }}>
+                  {item.icon}
+                </ListItemIcon>
+                <ListItemText 
+                  primary={item.text} 
+                  primaryTypographyProps={{ 
+                    fontWeight: isSelected ? 800 : 500, 
+                    fontSize: 13.5,
+                    fontFamily: '"Outfit", sans-serif'
+                  }} 
+                />
+              </ListItemButton>
+            </ListItem>
+          );
+        })}
       </List>
-      <Divider sx={{ opacity: 0.1 }} />
+      <Divider sx={{ opacity: 0.05 }} />
       <Box sx={{ p: 2 }}>
-        <Card sx={{ bgcolor: 'rgba(7, 16, 40, 0.6)', border: '1px solid rgba(255, 255, 255, 0.05)', backdropFilter: 'blur(8px)' }}>
-          <CardContent sx={{ py: 1.5, px: 2, '&:last-child': { pb: 1.5 } }}>
-            <Box display="flex" flexDirection="column" gap={1}>
+        <Card sx={{ bgcolor: 'rgba(9, 9, 15, 0.8)', border: '1px solid rgba(255, 255, 255, 0.04)', borderRadius: 4 }}>
+          <CardContent sx={{ py: 1.8, px: 2, '&:last-child': { pb: 1.8 } }}>
+            <Box display="flex" flexDirection="column" gap={1.5}>
               <Box display="flex" alignItems="center" justifyContent="space-between">
-                <Typography sx={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.7)' }}>AI CORE</Typography>
-                <Box display="flex" alignItems="center" gap={0.5}>
-                  <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#10B981', animation: 'pulse 1.5s infinite' }} />
-                  <Typography sx={{ fontSize: 10, fontWeight: 800, color: '#10B981' }}>ACTIVE</Typography>
+                <Typography sx={{ fontSize: 10, fontWeight: 900, color: '#64748b', letterSpacing: '0.8px' }}>CORE ENGINE</Typography>
+                <Box display="flex" alignItems="center" gap={0.5} sx={{ bgcolor: 'rgba(16, 185, 129, 0.1)', px: 1, py: 0.2, borderRadius: 100 }}>
+                  <Box sx={{ width: 5, height: 5, borderRadius: '50%', bgcolor: '#10B981', animation: 'pulse 1.5s infinite' }} />
+                  <Typography sx={{ fontSize: 9, fontWeight: 900, color: '#10B981' }}>ONLINE</Typography>
                 </Box>
               </Box>
               <Box display="flex" alignItems="center" justifyContent="space-between">
-                <Typography sx={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.7)' }}>ML PIPELINE</Typography>
-                <Box display="flex" alignItems="center" gap={0.5}>
-                  <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#10B981', animation: 'pulse 1.5s infinite' }} />
-                  <Typography sx={{ fontSize: 10, fontWeight: 800, color: '#10B981' }}>HEALTHY</Typography>
+                <Typography sx={{ fontSize: 10, fontWeight: 900, color: '#64748b', letterSpacing: '0.8px' }}>ML PIPELINE</Typography>
+                <Box display="flex" alignItems="center" gap={0.5} sx={{ bgcolor: 'rgba(16, 185, 129, 0.1)', px: 1, py: 0.2, borderRadius: 100 }}>
+                  <Box sx={{ width: 5, height: 5, borderRadius: '50%', bgcolor: '#10B981', animation: 'pulse 1.5s infinite' }} />
+                  <Typography sx={{ fontSize: 9, fontWeight: 900, color: '#10B981' }}>STABLE</Typography>
                 </Box>
               </Box>
               <Box display="flex" alignItems="center" justifyContent="space-between">
-                <Typography sx={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.7)' }}>SENSOR GRID</Typography>
-                <Box display="flex" alignItems="center" gap={0.5}>
-                  <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#10B981', animation: 'pulse 1.5s infinite' }} />
-                  <Typography sx={{ fontSize: 10, fontWeight: 800, color: '#10B981' }}>ONLINE</Typography>
+                <Typography sx={{ fontSize: 10, fontWeight: 900, color: '#64748b', letterSpacing: '0.8px' }}>SENSOR GRID</Typography>
+                <Box display="flex" alignItems="center" gap={0.5} sx={{ bgcolor: 'rgba(16, 185, 129, 0.1)', px: 1, py: 0.2, borderRadius: 100 }}>
+                  <Box sx={{ width: 5, height: 5, borderRadius: '50%', bgcolor: '#10B981', animation: 'pulse 1.5s infinite' }} />
+                  <Typography sx={{ fontSize: 9, fontWeight: 900, color: '#10B981' }}>ACTIVE</Typography>
                 </Box>
               </Box>
             </Box>
@@ -388,9 +425,9 @@ export default function App() {
               </Box>
             </Box>
             <Box display="flex" alignItems="center" gap={2}>
-              <Tooltip title="Run Explanatory Yogurt Demo">
-                <Button variant="outlined" size="small" color="primary" onClick={handleYogurtDemo} startIcon={<HelpIcon />}>
-                  Yogurt demo
+              <Tooltip title="Run Real-Time AI Telemetry Diagnostics Scan">
+                <Button variant="outlined" size="small" color="primary" onClick={handleXaiDiagnostic} startIcon={<HelpIcon />}>
+                  XAI Telemetry Scan
                 </Button>
               </Tooltip>
               <Badge badgeContent={recommendations.filter(r => r.status === 'applied' || r.status === 'replenished').length} color="success">
@@ -510,39 +547,55 @@ export default function App() {
                 }
               ].map((card, idx) => (
                 <Grid item xs={12} sm={6} md={4} lg={2} key={idx}>
-                  <Card sx={{ bgcolor: '#111827', border: '1px solid rgba(255,255,255,0.05)', position: 'relative', overflow: 'hidden' }}>
+                  <Card sx={{ 
+                    bgcolor: 'rgba(17, 16, 25, 0.65)', 
+                    border: '1px solid rgba(255,255,255,0.04)', 
+                    backdropFilter: 'blur(20px)',
+                    position: 'relative', 
+                    overflow: 'hidden',
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    '&:hover': {
+                      transform: 'translateY(-4px)',
+                      borderColor: 'primary.main',
+                      boxShadow: '0 12px 30px -10px rgba(139, 92, 246, 0.25)',
+                      '& .metric-avatar': {
+                        bgcolor: 'rgba(139, 92, 246, 0.15)',
+                        transform: 'scale(1.1)'
+                      }
+                    }
+                  }}>
                     <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
                       <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
-                        <Typography sx={{ fontSize: 11, fontWeight: 700, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                        <Typography sx={{ fontSize: 10, fontWeight: 800, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.8px', fontFamily: '"Outfit", sans-serif' }}>
                           {card.title}
                         </Typography>
-                        <Avatar sx={{ bgcolor: 'rgba(255,255,255,0.03)', width: 28, height: 28 }}>
+                        <Avatar className="metric-avatar" sx={{ bgcolor: 'rgba(255,255,255,0.02)', width: 30, height: 30, transition: 'all 0.25s' }}>
                           {card.icon}
                         </Avatar>
                       </Box>
                       <Box display="flex" alignItems="baseline" gap={1}>
-                        <Typography variant="h6" fontWeight="950" sx={{ letterSpacing: '-0.5px' }}>{card.value}</Typography>
-                        <Typography sx={{ fontSize: 10, fontWeight: 800, color: card.trend === 'up' ? '#10B981' : card.trend === 'down' ? '#EF4444' : 'text.secondary' }}>
+                        <Typography variant="h6" fontWeight="950" sx={{ letterSpacing: '-0.5px', fontFamily: '"Outfit", sans-serif' }}>{card.value}</Typography>
+                        <Typography sx={{ fontSize: 10, fontWeight: 900, color: card.trend === 'up' ? '#10B981' : card.trend === 'down' ? '#EF4444' : 'text.secondary' }}>
                           {card.trend === 'up' ? '↑' : card.trend === 'down' ? '↓' : '•'}
                         </Typography>
                       </Box>
-                      <Typography sx={{ fontSize: 10, color: 'text.secondary', display: 'block', mt: 0.5 }}>
+                      <Typography sx={{ fontSize: 10, color: 'text.secondary', display: 'block', mt: 0.5, fontWeight: 600 }}>
                         {card.sub}
                       </Typography>
                       
                       {/* Mini Sparkline Graph */}
-                      <Box sx={{ height: 20, mt: 1 }}>
+                      <Box sx={{ height: 20, mt: 1.5 }}>
                         <ResponsiveContainer width="100%" height="100%">
-                          <AreaChart data={card.data.map((v, i) => ({ i, v }))}>
-                            <Area type="monotone" dataKey="v" stroke={card.sparkColor} fill={card.sparkColor} fillOpacity={0.08} strokeWidth={1.5} dot={false} />
-                          </AreaChart>
+                           <AreaChart data={card.data.map((v, i) => ({ i, v }))}>
+                             <Area type="monotone" dataKey="v" stroke={card.sparkColor} fill={card.sparkColor} fillOpacity={0.08} strokeWidth={1.8} dot={false} />
+                           </AreaChart>
                         </ResponsiveContainer>
                       </Box>
 
                       {/* AI Confidence badge */}
                       <Box display="flex" justifyContent="space-between" alignItems="center" mt={1} sx={{ pt: 0.5, borderTop: '1px solid rgba(255,255,255,0.03)' }}>
-                        <Typography sx={{ fontSize: 8, fontWeight: 700, color: 'rgba(255,255,255,0.4)' }}>CONFIDENCE</Typography>
-                        <Typography sx={{ fontSize: 8, fontWeight: 900, color: '#06B6D4' }}>{card.conf}</Typography>
+                        <Typography sx={{ fontSize: 8, fontWeight: 800, color: 'rgba(255,255,255,0.3)', letterSpacing: '0.5px' }}>CONFIDENCE</Typography>
+                        <Typography sx={{ fontSize: 9, fontWeight: 950, color: '#06B6D4' }}>{card.conf}</Typography>
                       </Box>
                     </CardContent>
                   </Card>
@@ -559,28 +612,28 @@ export default function App() {
                   
                   {/* Digital Twin (Item 6) */}
                   <Grid item xs={12}>
-                    <Card sx={{ bgcolor: '#111827', border: '1px solid rgba(255,255,255,0.05)' }}>
+                    <Card sx={{ bgcolor: 'rgba(17, 16, 25, 0.65)', border: '1px solid rgba(255, 255, 255, 0.04)', backdropFilter: 'blur(20px)' }}>
                       <CardContent sx={{ p: 3 }}>
-                        <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-                          <Box display="flex" alignItems="center" gap={1}>
-                            <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: '#06B6D4', animation: 'pulse 1.5s infinite' }} />
-                            <Typography variant="h6" fontWeight="bold">Digital Store Twin (Real-Time Shelf Activity & Hotspots)</Typography>
+                        <Box display="flex" justifyContent="space-between" alignItems="center" mb={2.5}>
+                          <Box display="flex" alignItems="center" gap={1.5}>
+                            <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: '#06B6D4', animation: 'pulse 1.5s infinite', boxShadow: '0 0 10px #06B6D4' }} />
+                            <Typography variant="h6" fontWeight="900" sx={{ fontFamily: '"Outfit", sans-serif', letterSpacing: '-0.3px' }}>Digital Store Twin (Real-Time Shelf Activity & Hotspots)</Typography>
                           </Box>
-                          <Chip label="Customer Flow: Simulated Live" size="small" sx={{ bgcolor: 'rgba(6, 182, 212, 0.1)', color: '#06B6D4', border: '1px solid rgba(6, 182, 212, 0.2)', fontSize: 10 }} />
+                          <Chip label="Customer Flow: Simulated Live" size="small" sx={{ bgcolor: 'rgba(6, 182, 212, 0.1)', color: '#06B6D4', border: '1px solid rgba(6, 182, 212, 0.2)', fontSize: 10, fontWeight: 800 }} />
                         </Box>
                         
                         {/* Simulation twin floorplan */}
-                        <Box sx={{ bgcolor: '#071028', border: '1px solid rgba(255,255,255,0.03)', borderRadius: 3, p: 3, display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(4, 1fr)' }, gap: 2, minHeight: 180 }}>
+                        <Box sx={{ bgcolor: 'rgba(8, 7, 16, 0.6)', border: '1px solid rgba(255,255,255,0.03)', borderRadius: 4, p: 3, display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(4, 1fr)' }, gap: 2, minHeight: 180 }}>
                           {[
                             { zone: 'A1 - FRESH PRODUCE', health: '94%', color: '#10B981', items: 'Fruits & Vegetables', status: 'Healthy Zone', pulse: true, coords: [{x: '20%', y: '40%'}, {x: '45%', y: '60%'}] },
                             { zone: 'B2 - COLD ROOM', health: '82%', color: '#EF4444', items: 'Dairy & Meats', status: 'Temp Drift Alert', pulse: true, coords: [{x: '80%', y: '30%'}] },
                             { zone: 'C3 - FROZEN DECK', health: '91%', color: '#F59E0B', items: 'Frozen Foods', status: 'Anomaly Spike', pulse: true, coords: [{x: '15%', y: '70%'}, {x: '75%', y: '80%'}] },
                             { zone: 'D4 - BEVERAGE BLOCK', health: '97%', color: '#10B981', items: 'Drinks & Soda', status: 'Optimal Shelf', pulse: false, coords: [] }
                           ].map((shelf, i) => (
-                            <Box key={i} sx={{ position: 'relative', bgcolor: 'rgba(255,255,255,0.01)', border: `1px solid rgba(255,255,255,0.04)`, borderTop: `4px solid ${shelf.color}`, borderRadius: 2, p: 2, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: 120 }}>
+                            <Box key={i} sx={{ position: 'relative', bgcolor: 'rgba(255,255,255,0.02)', border: `1px solid rgba(255,255,255,0.04)`, borderTop: `4px solid ${shelf.color}`, borderRadius: 3, p: 2, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: 130, transition: 'transform 0.2s', '&:hover': { transform: 'scale(1.02)' } }}>
                               <Box>
-                                <Typography sx={{ fontSize: 10, fontWeight: 900, color: 'text.secondary' }}>{shelf.zone}</Typography>
-                                <Typography sx={{ fontSize: 12, fontWeight: 800, mt: 0.5 }}>{shelf.items}</Typography>
+                                <Typography sx={{ fontSize: 9, fontWeight: 900, color: 'text.secondary', letterSpacing: '0.5px' }}>{shelf.zone}</Typography>
+                                <Typography sx={{ fontSize: 13, fontWeight: 800, mt: 0.5, color: '#fff', fontFamily: '"Outfit", sans-serif' }}>{shelf.items}</Typography>
                               </Box>
                               
                               {/* Customer simulated dots */}
@@ -859,6 +912,72 @@ export default function App() {
                               </Box>
                             ))}
                           </Box>
+                        </Box>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+
+                  {/* Supplier Restocking alerts console */}
+                  <Grid item xs={12}>
+                    <Card sx={{ bgcolor: '#111827', border: '1px solid rgba(255,255,255,0.05)', position: 'relative' }}>
+                      <CardContent sx={{ p: 3 }}>
+                        <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
+                          <Box display="flex" alignItems="center" gap={1.5}>
+                            <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: '#F59E0B', animation: 'pulse 1.5s infinite' }} />
+                            <Typography variant="h6" fontWeight="bold">Supplier Restock Queue</Typography>
+                          </Box>
+                          <Chip label={`${vendorAlerts.length} Active`} size="small" color="warning" sx={{ height: 18, fontSize: 9, fontWeight: 900 }} />
+                        </Box>
+
+                        <Box display="flex" flexDirection="column" gap={2} sx={{ maxHeight: 300, overflowY: 'auto', pr: 0.5 }}>
+                          {vendorAlerts.length === 0 ? (
+                            <Box sx={{ bgcolor: '#071028', p: 2.5, borderRadius: 2, border: '1px solid rgba(255,255,255,0.03)', textAlign: 'center', py: 4 }}>
+                              <Typography variant="caption" color="text.secondary">All shelves fully stocked. No active supplier dispatches pending.</Typography>
+                            </Box>
+                          ) : (
+                            vendorAlerts.map(alert => {
+                              const isPending = alert.status.includes('Pending');
+                              return (
+                                <Box key={alert.id} sx={{ 
+                                  bgcolor: '#071028', 
+                                  p: 2, 
+                                  borderRadius: 2,
+                                  borderLeft: `4px solid ${isPending ? '#F59E0B' : '#10B981'}`,
+                                  borderTop: '1px solid rgba(255,255,255,0.03)',
+                                  borderRight: '1px solid rgba(255,255,255,0.03)',
+                                  borderBottom: '1px solid rgba(255,255,255,0.03)'
+                                }}>
+                                  <Box display="flex" justifyContent="space-between" alignItems="start" mb={0.5}>
+                                    <Typography sx={{ fontSize: 12, fontWeight: 900, color: '#fff' }}>{alert.product_name}</Typography>
+                                    <Chip 
+                                      label={alert.status} 
+                                      size="small" 
+                                      sx={{ 
+                                        height: 16, 
+                                        fontSize: 8, 
+                                        fontWeight: 900, 
+                                        bgcolor: isPending ? 'rgba(245, 158, 11, 0.08)' : 'rgba(16, 185, 129, 0.08)',
+                                        color: isPending ? '#F59E0B' : '#10B981'
+                                      }} 
+                                    />
+                                  </Box>
+                                  <Typography sx={{ fontSize: 10, color: 'text.secondary', display: 'block', mb: 1 }}>
+                                    Supplier: <strong>{alert.supplier}</strong>
+                                  </Typography>
+                                  <Box display="flex" justifyContent="space-between" alignItems="center" sx={{ bgcolor: 'rgba(255,255,255,0.01)', p: 1, borderRadius: 1.5, border: '1px solid rgba(255,255,255,0.02)' }}>
+                                    <Box>
+                                      <Typography sx={{ fontSize: 9, color: 'text.secondary' }}>Remaining</Typography>
+                                      <Typography sx={{ fontSize: 11, fontWeight: 950, color: '#EF4444' }}>{alert.quantity_remaining} units (Min: {alert.reorder_threshold})</Typography>
+                                    </Box>
+                                    <Box sx={{ textAlign: 'right' }}>
+                                      <Typography sx={{ fontSize: 9, color: 'text.secondary' }}>Replenishment PO</Typography>
+                                      <Typography sx={{ fontSize: 11, fontWeight: 950, color: '#10B981' }}>+{alert.units_ordered} ordered</Typography>
+                                    </Box>
+                                  </Box>
+                                </Box>
+                              );
+                            })
+                          )}
                         </Box>
                       </CardContent>
                     </Card>

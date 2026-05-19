@@ -8,39 +8,41 @@ const darkTheme = createTheme({
   palette: {
     mode: 'dark',
     primary: {
-      main: '#7c3aed', // Vibrant purple
-      light: '#a78bfa',
-      dark: '#5b21b6',
+      main: '#8b5cf6', // Indigo Violet
+      light: '#c084fc',
+      dark: '#6d28d9',
     },
     secondary: {
-      main: '#10b981', // Emerald green
+      main: '#10b981', // Emerald Mint
     },
     error: {
-      main: '#ef4444',
+      main: '#f43f5e',
     },
     warning: {
-      main: '#f59e0b',
+      main: '#fbbf24',
     },
     success: {
-      main: '#10b981',
+      main: '#34d399',
     },
     background: {
-      default: '#0f172a', // Slate 900
-      paper: '#1e293b', // Slate 800
+      default: '#09090f', // Deep Space Night
+      paper: '#111019', // Obsidian Velvet
     },
     text: {
       primary: '#f8fafc',
-      secondary: '#cbd5e1',
+      secondary: '#94a3b8',
     }
   },
   typography: {
-    fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
-    h1: { fontWeight: 700 },
-    h2: { fontWeight: 700 },
-    h3: { fontWeight: 600 },
-    h4: { fontWeight: 600 },
-    h5: { fontWeight: 600 },
-    h6: { fontWeight: 600 },
+    fontFamily: '"Inter", "Outfit", sans-serif',
+    h1: { fontFamily: '"Outfit", sans-serif', fontWeight: 900, letterSpacing: '-1.5px' },
+    h2: { fontFamily: '"Outfit", sans-serif', fontWeight: 800, letterSpacing: '-1px' },
+    h3: { fontFamily: '"Outfit", sans-serif', fontWeight: 800, letterSpacing: '-0.5px' },
+    h4: { fontFamily: '"Outfit", sans-serif', fontWeight: 700 },
+    h5: { fontFamily: '"Outfit", sans-serif', fontWeight: 700 },
+    h6: { fontFamily: '"Outfit", sans-serif', fontWeight: 600 },
+    subtitle1: { fontFamily: '"Outfit", sans-serif', fontWeight: 600 },
+    subtitle2: { fontFamily: '"Outfit", sans-serif', fontWeight: 600 },
   },
   shape: {
     borderRadius: 16,
